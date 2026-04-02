@@ -13,8 +13,8 @@ export function PricingPage() {
         <Container>
           <SectionHeading
             eyebrow="Pricing"
-            title="Choose the level of access that matches how seriously you play."
-            description="Scout keeps the front door open, then layers in sharper discovery, stronger visibility, and premium local advantages for players who want more."
+            title="Simple memberships with room to grow"
+            description="Scout keeps the front door open, then layers in stronger discovery, visibility, and local status for players who want more."
             align="center"
           />
 
@@ -22,40 +22,46 @@ export function PricingPage() {
             {pricingTiers.map((tier) => (
               <GlassCard
                 key={tier.name}
-                className={`relative overflow-hidden p-8 ${tier.featured ? "border-accent-purple/40 bg-white/[0.05] shadow-glow" : ""}`}
+                className={`relative overflow-hidden p-7 ${tier.featured ? "border-violet-400/40 shadow-[0_20px_80px_rgba(124,58,237,0.28)]" : ""}`}
               >
-                <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${tier.accent} opacity-60 blur-2xl`} />
+                <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${tier.accent} opacity-80 blur-3xl`} />
                 <div className="relative">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-display text-3xl font-semibold text-white">{tier.name}</div>
-                      <div className="mt-2 text-sm text-text-muted">{tier.badge}</div>
-                    </div>
-                    {tier.featured ? (
-                      <div className="rounded-full border border-accent-purple/30 bg-accent-purple/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white">
-                        Recommended
+                  {tier.featured ? (
+                    <div className="absolute right-0 top-0">
+                      <div className="rounded-full border border-violet-300/20 bg-violet-500/20 px-3 py-2 text-xs text-violet-200">
+                        Most Popular
                       </div>
-                    ) : null}
+                    </div>
+                  ) : null}
+
+                  <div>
+                    <div className="text-sm uppercase tracking-[0.3em] text-white/45">Membership</div>
+                    <div className="mt-3 font-display text-3xl font-black text-white">{tier.name}</div>
+                    <div className="mt-2 text-white/65">{tier.subtitle}</div>
                   </div>
 
                   <div className="mt-8 flex items-end gap-1">
-                    <span className="font-display text-6xl font-semibold text-white">{tier.price}</span>
-                    <span className="pb-2 text-sm text-text-muted">{tier.cadence ?? ""}</span>
+                    <span className="font-display text-6xl font-black text-white">{tier.price}</span>
+                    <span className="mb-2 text-sm text-white/50">{tier.cadence ?? ""}</span>
                   </div>
-                  <p className="mt-4 text-base leading-7 text-text-muted">{tier.description}</p>
+                  <p className="mt-4 text-base leading-relaxed text-white/70">{tier.description}</p>
 
                   <div className="mt-8 space-y-4">
                     {tier.features.map((feature) => (
-                      <div key={feature} className="flex items-center gap-3 text-sm text-text-muted">
-                        <Check className="h-4 w-4 text-accent-blue" />
+                      <div key={feature} className="flex items-start gap-3 text-white/80">
+                        <Check className="mt-0.5 h-5 w-5 shrink-0 text-violet-300" />
                         <span>{feature}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="mt-10">
-                    <Button href="/" variant={tier.featured ? "primary" : "secondary"} className="w-full">
-                      {tier.name === "Free" ? "Get Started" : `Choose ${tier.name}`}
+                    <Button
+                      href="/"
+                      variant={tier.featured ? "primary" : "secondary"}
+                      className={`w-full py-6 text-base ${tier.featured ? "" : "bg-white/10 text-white shadow-none hover:bg-white/15"}`}
+                    >
+                      {tier.buttonLabel}
                     </Button>
                   </div>
                 </div>
