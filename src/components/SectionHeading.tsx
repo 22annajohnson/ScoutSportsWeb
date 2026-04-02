@@ -16,14 +16,14 @@ export function SectionHeading({
   return (
     <div className={alignment}>
       {eyebrow ? (
-        <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.32em] text-text-muted">
+        <div className="mb-4 text-xs uppercase tracking-[0.35em] text-blue-200/60">
           {eyebrow}
         </div>
       ) : null}
-      <h2 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+      <h2 className="font-display text-4xl font-black tracking-tight leading-[0.95] text-white sm:text-5xl">
         {title}
       </h2>
-      <p className="mt-4 text-base leading-7 text-text-muted sm:text-lg">{description}</p>
+      <p className="mt-4 text-lg leading-relaxed text-white/70">{description}</p>
     </div>
   );
 }

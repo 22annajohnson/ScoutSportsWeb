@@ -15,10 +15,7 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  background:
-    radial-gradient(circle at top, rgba(139, 92, 246, 0.16), transparent 28%),
-    radial-gradient(circle at 85% 10%, rgba(56, 189, 248, 0.12), transparent 20%),
-    #06070b;
+  background: #09090f;
   color: #f4f7fb;
   font-family: "Space Grotesk", sans-serif;
 }
