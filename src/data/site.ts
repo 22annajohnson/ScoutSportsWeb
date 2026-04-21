@@ -3,12 +3,11 @@ import {
   BadgeCheck,
   Crown,
   MapPinned,
-  Medal,
-  Radar,
   Sparkles,
   Swords,
   Trophy,
   Users,
+  Zap,
 } from "lucide-react";
 
 export const navLinks = [
@@ -19,9 +18,9 @@ export const navLinks = [
 ];
 
 export const heroStats = [
-  { label: "Live city energy", value: "24/7" },
-  { label: "Local circles", value: "Inner" },
-  { label: "Game formats", value: "Pickup + Brackets" },
+  { label: "Projected local players", value: "1,200+" },
+  { label: "Asynchronous brackets", value: "24/7" },
+  { label: "Potential connections", value: "∞" },
 ];
 
 export const howItWorksSteps = [
@@ -29,7 +28,7 @@ export const howItWorksSteps = [
     title: "Swipe local",
     description:
       "Scout surfaces nearby players based on sport, availability, level, and social fit so every match starts with signal.",
-    icon: Radar,
+    icon: Users,
   },
   {
     title: "Match the vibe",
@@ -53,28 +52,22 @@ export const howItWorksSteps = [
 
 export const featureHighlights = [
   {
-    title: "Find your local run faster",
+    title: "Swipe local players",
     description:
-      "Skip cold outreach. Scout helps players discover who is active nearby and ready for the right kind of game.",
-    icon: MapPinned,
-  },
-  {
-    title: "Inner Circles that actually feel personal",
-    description:
-      "Build tighter communities with private groups, trusted players, and recurring crews that move together.",
+      "Find people nearby who match your sport, vibe, and schedule.",
     icon: Users,
   },
   {
-    title: "Asynchronous brackets built for real life",
+    title: "Play real matches",
     description:
-      "Compete on your own schedule, track progress, and keep momentum between games without live tournament friction.",
-    icon: Swords,
+      "Set games fast and build your local sports circle naturally.",
+    icon: Zap,
   },
   {
-    title: "Rankings that turn casual play into status",
+    title: "Track your rise",
     description:
-      "Local ratings and sharper stats create context around every matchup and give the app a premium edge.",
-    icon: Medal,
+      "Ratings, inner circles, brackets, and local momentum all in one place.",
+    icon: Trophy,
   },
 ];
 
@@ -89,47 +82,55 @@ export const pricingTiers = [
   {
     name: "Free",
     price: "$0",
-    description: "Get in the game, build your profile, and start meeting local players.",
+    cadence: "/month",
+    subtitle: "Get in the game",
+    description: "Create your player profile and start matching locally right away.",
     badge: "Open access",
     accent: "from-white/10 to-white/5",
+    buttonLabel: "Join Free",
     features: [
-      "Basic profile",
-      "Swipe and match",
-      "Basic feed access",
-      "Public circles",
-      "Standard ratings",
+      "Create your player profile",
+      "Swipe and match locally",
+      "Basic social feed access",
+      "Standard match ratings",
+      "Join public circles",
     ],
   },
   {
     name: "Pro",
-    price: "$14",
+    price: "$9.99",
     cadence: "/month",
-    description: "More control, more context, and faster access to competitive local play.",
+    subtitle: "For active players",
+    description: "More control, more context, and stronger access to the local game flow.",
     badge: "Most popular",
     accent: "from-accent-purple/30 to-accent-blue/20",
+    buttonLabel: "Go Pro",
     featured: true,
     features: [
-      "Advanced filters",
-      "Better ranking views",
-      "Priority bracket access",
-      "Expanded stats",
-      "More circle features",
+      "Advanced player filters",
+      "Unlimited circle invites",
+      "Expanded rankings and stats",
+      "Priority bracket entry",
+      "See who fits your style better",
+      "Early access to premium local drops",
     ],
   },
   {
     name: "Elite",
-    price: "$29",
+    price: "$17.99",
     cadence: "/month",
-    description: "Visibility, status, and premium discovery for players who want the full Scout experience.",
+    subtitle: "For the obsessed",
+    description: "Visibility, status, and premium discovery perks for players all the way in.",
     badge: "Members only feel",
-    accent: "from-accent-blue/30 to-accent-purple/20",
+    accent: "from-fuchsia-500/30 to-accent-blue/25",
+    buttonLabel: "Go Elite",
     features: [
       "Everything in Pro",
-      "Premium profile visibility",
-      "Elite badge",
-      "Exclusive circles",
-      "Premium local perks",
-      "Better bracket and discovery perks",
+      "Elite badge on profile",
+      "Top-tier visibility in discovery",
+      "Exclusive elite-only circles",
+      "Premium tournament and bracket perks",
+      "Special partner offers and local drops",
     ],
   },
 ];

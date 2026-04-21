@@ -6,68 +6,68 @@ export function AppPreviewSection() {
   return (
     <section className="py-20">
       <Container>
-        <SectionHeading
-          eyebrow="Inside the app"
-          title="A sports product that feels social before it feels transactional."
-          description="Every surface is built to move players from discovery to game-time faster, with enough status, identity, and local context to keep the community sticky."
-          align="center"
-        />
-
-        <div className="mt-14 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <GlassCard className="flex min-h-[420px] flex-col justify-between bg-gradient-to-br from-accent-purple/10 to-transparent p-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <GlassCard className="overflow-hidden p-7">
             <div>
-              <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.32em] text-text-muted">
-                Player profile
-              </div>
-              <h3 className="mt-5 font-display text-3xl font-semibold text-white">Visibility, status, and chemistry cues in one place.</h3>
+              <p className="text-sm uppercase tracking-[0.3em] text-white/40">Discovery + community</p>
+              <h3 className="mt-4 font-display text-3xl font-bold text-white">Your app, your crew, your local scene</h3>
+              <p className="mt-4 text-white/70 leading-relaxed">
+                Showcase local courts, premium circles, restaurant partnerships, club access, and sports hotspots
+                with the same purple-blue visual system from the app.
+              </p>
             </div>
-            <div className="grid gap-4">
-              <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                <div className="text-sm text-text-muted">Profile signals</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {["Elite badge", "88% reply rate", "Late-night runs", "Hoops + tennis"].map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs text-white"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
+              {[
+                "Purple / blue glow",
+                "Large rounded cards",
+                "Premium dark UI",
+                "Map + discovery sections",
+                "Leaderboard energy",
+                "Social-first layouts",
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-white/80">
+                  {item}
                 </div>
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                <div className="text-sm text-text-muted">Recent movement</div>
-                <div className="mt-3 font-display text-2xl font-semibold text-white">+12 city ranking this week</div>
-              </div>
+              ))}
             </div>
           </GlassCard>
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            {[
-              {
-                title: "Swipe stack",
-                description: "Fast local discovery with stronger filters and a more intentional social graph.",
-              },
-              {
-                title: "Circles feed",
-                description: "Private crews, recurring sessions, and shared momentum around the people you trust.",
-              },
-              {
-                title: "Bracket progress",
-                description: "Automated asynchronous competition that fits around real schedules.",
-              },
-              {
-                title: "Hotspot map",
-                description: "Discover clubs, courts, food, and premium partner spots around every match.",
-              },
-            ].map((card) => (
-              <GlassCard key={card.title} className="min-h-[200px] p-6">
-                <div className="text-xs uppercase tracking-[0.28em] text-text-muted">Scout surface</div>
-                <h3 className="mt-4 font-display text-2xl font-semibold text-white">{card.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-text-muted">{card.description}</p>
-              </GlassCard>
-            ))}
-          </div>
+          <GlassCard className="overflow-hidden bg-gradient-to-br from-violet-500/20 to-blue-500/15 p-7">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">Homepage goal</p>
+              <h3 className="mt-4 font-display text-3xl font-bold text-white">Make people want in immediately</h3>
+              <p className="mt-4 text-white/70 leading-relaxed">
+                The site should not feel like a startup landing page. It should feel like a live local sports scene
+                you can join.
+              </p>
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {["Launch concept", "Mobile-first layout"].map((item, index) => (
+                <div
+                  key={item}
+                  className={`rounded-2xl px-4 py-3 text-sm ${
+                    index === 0
+                      ? "bg-gradient-to-r from-accent-purple to-accent-blue text-white"
+                      : "border border-white/10 bg-white/5 text-white"
+                  }`}
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {[
+                "Live local energy",
+                "Player-first discovery",
+                "Premium social cues",
+                "Cleaner conversion path",
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-white/80">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </GlassCard>
         </div>
       </Container>
     </section>
