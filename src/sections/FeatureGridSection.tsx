@@ -9,8 +9,8 @@ export function FeatureGridSection() {
       <Container>
         <SectionHeading
           eyebrow="Why it works"
-          title="Designed to feel alive, not empty"
-          description="Scout should feel like your local sports world already exists the second you open it. The website should sell that energy immediately."
+          title="Find better games without chasing group chats"
+          description="Scout gives players a real local sports graph: who is nearby, who fits your level, where people are playing, and which circles are worth joining."
         />
 
         <div className="mt-10 grid gap-5 md:grid-cols-3">

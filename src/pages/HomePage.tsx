@@ -14,8 +14,8 @@ export function HomePage() {
       <PricingPreviewSection />
       <BusinessPreviewSection />
       <CTASection
-        title="Scout is where local sports starts feeling premium."
-        description="Join early to be first into new circles, sharper brackets, and the city-level sports network built around real play."
+        title="Your next favorite teammate is probably nearby."
+        description="Join Scout early to meet better matches, form tighter circles, compete in flexible brackets, and discover the local sports spots your city runs on."
         primaryLabel="Get Early Access"
         primaryHref="/pricing"
         secondaryLabel="How Scout Works"

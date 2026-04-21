@@ -30,8 +30,8 @@ export function HeroSection() {
                 </span>
               </h1>
               <p className="max-w-2xl text-lg leading-relaxed text-white/72 sm:text-xl">
-              Scout helps you discover local players, match for pickup games, build inner circles, join brackets,
-              and unlock the sports spots that make your city feel alive.
+                Scout matches you with nearby players, helps you turn availability into real games, and brings your
+                city’s courts, circles, brackets, and sports hotspots into one premium community.
               </p>
             </div>
             <div className="mt-10 flex flex-wrap gap-4">
@@ -103,7 +103,7 @@ export function HeroSection() {
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   {["Brackets", "Inner Circle", "Hotspots"].map((item) => (
                     <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-sm text-white/55">Preview</p>
+                      <p className="text-sm text-white/55">Inside Scout</p>
                       <p className="mt-1 font-semibold text-white">{item}</p>
                     </div>
                   ))}
@@ -133,7 +133,7 @@ export function HeroSection() {
             <GlassCard className="absolute left-4 top-24 hidden max-w-[240px] bg-black/45 p-4 backdrop-blur-2xl md:block">
               <div className="flex items-center gap-2 text-sm text-white/60">
                 <MapPin className="h-4 w-4 text-blue-300" />
-                Nearby now
+                Hotspots nearby
               </div>
               <div className="mt-3 space-y-2">
                 {["McCarren courts", "BK padel club", "Baseline social"].map((item) => (

@@ -10,8 +10,8 @@ export function SocialProofSection() {
         <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <SectionHeading
             eyebrow="Community status"
-            title="Everything about Scout should feel active, local, and worth joining early."
-            description="The product is designed to create visible motion: people ranking up, circles forming, matches getting played, and local spots becoming part of the routine."
+            title="A local sports network with visible movement."
+            description="Every match can create momentum: players rank up, crews tighten, bracket paths advance, and the best local spots become part of the routine."
           />
 
           <GlassCard className="grid gap-4 p-6">
