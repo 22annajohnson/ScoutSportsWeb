@@ -80,6 +80,7 @@ export const socialSignals = [
 
 export const pricingTiers = [
   {
+    slug: "free",
     name: "Free",
     price: "$0",
     cadence: "/month",
@@ -88,6 +89,7 @@ export const pricingTiers = [
     badge: "Open access",
     accent: "from-white/10 to-white/5",
     buttonLabel: "Join Free",
+    signupPath: "/signup/free",
     features: [
       "Create your player profile",
       "Swipe and match locally",
@@ -97,6 +99,7 @@ export const pricingTiers = [
     ],
   },
   {
+    slug: "pro",
     name: "Pro",
     price: "$9.99",
     cadence: "/month",
@@ -105,6 +108,7 @@ export const pricingTiers = [
     badge: "Most popular",
     accent: "from-accent-purple/30 to-accent-blue/20",
     buttonLabel: "Go Pro",
+    signupPath: "/signup/pro",
     featured: true,
     features: [
       "Advanced player filters",
@@ -116,6 +120,7 @@ export const pricingTiers = [
     ],
   },
   {
+    slug: "elite",
     name: "Elite",
     price: "$17.99",
     cadence: "/month",
@@ -124,6 +129,7 @@ export const pricingTiers = [
     badge: "Members only feel",
     accent: "from-fuchsia-500/30 to-accent-blue/25",
     buttonLabel: "Go Elite",
+    signupPath: "/signup/elite",
     features: [
       "Everything in Pro",
       "Elite badge on profile",
