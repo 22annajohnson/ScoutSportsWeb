@@ -57,7 +57,7 @@ export function PricingPage() {
 
                   <div className="mt-10">
                     <Button
-                      href="/"
+                      href={tier.signupPath}
                       variant={tier.featured ? "primary" : "secondary"}
                       className={`w-full py-6 text-base ${tier.featured ? "" : "bg-white/10 text-white shadow-none hover:bg-white/15"}`}
                     >

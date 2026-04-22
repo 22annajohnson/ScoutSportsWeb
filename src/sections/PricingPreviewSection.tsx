@@ -50,7 +50,7 @@ export function PricingPreviewSection() {
                 </div>
                 <div className="mt-6">
                   <Button
-                    href="/pricing"
+                    href={tier.signupPath}
                     className={`w-full py-6 text-base ${tier.featured ? "" : "bg-white/10 text-white shadow-none hover:bg-white/15"}`}
                     variant={tier.featured ? "primary" : "secondary"}
                   >
