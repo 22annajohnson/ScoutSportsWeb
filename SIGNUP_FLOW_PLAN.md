@@ -1,50 +1,124 @@
-# Signup Flow Plan
+# Signup And Checkout Flow Plan
 
 ## Goal
 
-Create clear signup destinations for every pricing tier so visitors who click Free, Pro, or Elite can take the next step instead of looping back to the homepage.
+Separate two different actions on the pricing page:
 
-## Stack Plan
+- Free tier signup should collect sport and city interest before Scout launches everywhere.
+- Pro and Elite buttons should move toward checkout pages, but checkout should remain unreleased until payment/subscription infrastructure is ready.
 
-1. Signup page foundation
-- Add routed signup pages for `/signup/free`, `/signup/pro`, and `/signup/elite`.
-- Wire all pricing tier buttons to the matching signup route.
-- Use the existing pricing tier data so plan names, prices, descriptions, and features stay consistent.
-- Add a polished static signup form that captures early-access interest without introducing payment or backend dependencies.
+This keeps pre-release demand capture clean while still giving the paid tiers a real destination that can later become Stripe/app checkout.
 
-2. Conversion polish
-- Add stronger tier-specific confirmation states.
-- Improve form microcopy around what happens next for Free, Pro, and Elite.
-- Add reassurance copy for paid tiers that payment will happen later when subscriptions are ready.
+## Route Direction
 
-3. Backend/payment integration
-- Decide whether Free creates an account directly or joins early access first.
-- Connect form submissions to the chosen backend or CRM.
-- Add Stripe Checkout or subscription billing for Pro and Elite when pricing is final.
-- Track signup conversion events for each tier.
+### Free / Interest Capture
 
-4. Post-signup experience
-- Add a thank-you page or modal with next actions.
-- Offer app download, waitlist share, or city/sport onboarding.
-- Consider business logic for invite codes, early access priority, and launch cities.
+Use:
+
+```text
+/signup/free
+```
+
+Purpose:
+- collect early player interest
+- understand which sports and cities to prioritize
+- capture what users want from Scout before the app releases each sport/community
+
+Promise:
+- no payment
+- join the Scout interest list
+- get notified when Scout opens for the user’s sport/city
+
+### Paid Checkout Intent
+
+Use:
+
+```text
+/checkout/pro
+/checkout/elite
+```
+
+Purpose:
+- give paid tiers a dedicated destination
+- prepare the site for checkout without releasing payment yet
+- capture Pro/Elite demand separately from Free interest
+
+Promise before checkout is ready:
+- checkout is not live yet
+- no payment is collected
+- users can reserve interest and get notified when paid memberships open
+
+## Data Direction
+
+### Free Signup Data
+
+Eventually write Free signup submissions to `marketing_sport_interests`.
+
+Core fields:
+- first name
+- email
+- city
+- primary sport
+- optional goals / notes
+- preferred tier: `free`
+- source intent: `free_signup`
+
+### Paid Checkout Intent Data
+
+Eventually write Pro/Elite checkout-intent submissions to `marketing_checkout_intents`.
+
+Core fields:
+- selected tier: `pro` or `elite`
+- first name
+- email
+- optional city
+- optional primary sport
+- intent status: `checkout_not_live`
+
+Paid checkout intent is not the same thing as an active subscription.
 
 ## First PR Scope
 
-The first PR should only ship the safe frontend foundation:
+The first PR should ship the safe frontend foundation:
 
-- `SIGNUP_FLOW_PLAN.md`
-- tier-specific signup routes
-- pricing CTA routing
-- static signup form
-- confirmation state after form submission
-- no payment provider
-- no backend integration
+- update this plan
+- keep Free routed to `/signup/free`
+- route Pro to `/checkout/pro`
+- route Elite to `/checkout/elite`
+- add coming-soon checkout pages for paid tiers
+- keep the Free signup form focused on sport/city interest
+- keep all forms static with local confirmation state
+- no Supabase writes yet
+- no Stripe/payment provider yet
 
-## Done Criteria
+## Future PR Stack
+
+1. Supabase environment foundation
+- install `@supabase/supabase-js`
+- add `.env.example`
+- add `src/lib/supabase.ts`
+- add attribution helpers
+
+2. Sport interest persistence
+- connect `/signup/free` to `marketing_sport_interests`
+- add loading, error, and success states
+- capture sport/city launch demand
+
+3. Checkout intent persistence
+- connect `/checkout/pro` and `/checkout/elite` to `marketing_checkout_intents`
+- keep payment disabled
+- capture paid tier demand separately from sport interest
+
+4. Real checkout
+- connect Pro/Elite checkout to Stripe or app purchase flow
+- store successful subscriptions in app subscription tables
+- keep marketing checkout intent as attribution/demand history
+
+## Done Criteria For First PR
 
 - Free tier button opens `/signup/free`.
-- Pro tier button opens `/signup/pro`.
-- Elite tier button opens `/signup/elite`.
-- Unknown signup tiers redirect back to pricing.
-- Each signup page clearly shows the selected tier, benefits, and next step.
+- Pro tier button opens `/checkout/pro`.
+- Elite tier button opens `/checkout/elite`.
+- `/signup/pro` and `/signup/elite` do not act like paid signup pages.
+- Paid checkout pages clearly state that checkout is not live and no payment is collected.
 - Build passes.

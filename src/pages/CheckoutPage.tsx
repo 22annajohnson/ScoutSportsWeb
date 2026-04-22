@@ -1,30 +1,36 @@
 import { FormEvent, useState } from "react";
-import { Check, ChevronLeft, MapPin, Sparkles } from "lucide-react";
+import { Check, ChevronLeft, CreditCard, MapPin, Sparkles } from "lucide-react";
 import { Navigate, useParams } from "react-router-dom";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
 
-const tierNotes = {
-  free: {
-    eyebrow: "Sport interest",
-    headline: "Tell us where Scout should open next.",
-    note: "Join the Free interest list and help us prioritize the sports, cities, courts, and player communities that should launch first.",
-    submitLabel: "Join the interest list",
+const checkoutCopy = {
+  pro: {
+    eyebrow: "Pro checkout",
+    headline: "Pro checkout is almost ready.",
+    note: "Pro will unlock stronger discovery, better filters, priority bracket access, and deeper player context. Reserve interest now and we will notify you when paid memberships open.",
+    submitLabel: "Notify me about Pro",
+  },
+  elite: {
+    eyebrow: "Elite checkout",
+    headline: "Elite access is being prepared.",
+    note: "Elite will be Scout’s highest-visibility membership for exclusive circles, premium discovery, tournament perks, and local rewards. Reserve interest before checkout goes live.",
+    submitLabel: "Notify me about Elite",
   },
 };
 
-export function SignupPage() {
+export function CheckoutPage() {
   const { tierId } = useParams();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const tier = pricingTiers.find((plan) => plan.slug === tierId);
 
-  if (!tier || tierId !== "free") {
+  if (!tier || tierId !== "pro" && tierId !== "elite") {
     return <Navigate to="/pricing" replace />;
   }
 
-  const copy = tierNotes.free;
+  const copy = checkoutCopy[tierId];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,7 +47,7 @@ export function SignupPage() {
 
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-6">
-            <div className="inline-flex rounded-full border border-accent-purple/20 bg-accent-purple/10 px-4 py-2 text-sm text-violet-200">
+            <div className="inline-flex rounded-full border border-blue-300/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-200">
               {copy.eyebrow}
             </div>
             <div>
@@ -54,7 +60,7 @@ export function SignupPage() {
             <GlassCard className="relative overflow-hidden p-7">
               <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${tier.accent} opacity-80 blur-3xl`} />
               <div className="relative">
-                <p className="text-sm uppercase tracking-[0.3em] text-white/45">Selected membership</p>
+                <p className="text-sm uppercase tracking-[0.3em] text-white/45">Checkout preview</p>
                 <div className="mt-4 flex items-end gap-2">
                   <span className="font-display text-4xl font-black text-white">{tier.name}</span>
                   <span className="mb-1 text-white/55">
@@ -82,29 +88,29 @@ export function SignupPage() {
                   <Sparkles className="h-6 w-6" />
                 </div>
                 <h2 className="mt-8 font-display text-4xl font-black tracking-tight text-white">
-                  You are on the Scout interest list.
+                  You are on the {tier.name} checkout list.
                 </h2>
                 <p className="mt-4 text-lg leading-relaxed text-white/70">
-                  We have your sport and city interest saved. Scout will use this demand to prioritize launch markets,
-                  local communities, and the next sports to support.
+                  We will notify you when {tier.name} checkout opens. No payment was collected, and this does not
+                  create an active subscription yet.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Button href="/how-it-works">See how Scout works</Button>
-                  <Button href="/business" variant="secondary">
-                    Partner with Scout
+                  <Button href="/signup/free">Join Free interest</Button>
+                  <Button href="/how-it-works" variant="secondary">
+                    See how Scout works
                   </Button>
                 </div>
               </div>
             ) : (
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-white/45">Launch interest</p>
+                  <p className="text-sm uppercase tracking-[0.3em] text-white/45">Checkout not live</p>
                   <h2 className="mt-3 font-display text-4xl font-black tracking-tight text-white">
-                    Tell us where you play.
+                    Reserve paid-tier interest.
                   </h2>
                   <p className="mt-3 text-white/70">
-                    This helps Scout understand which sports and cities have real player demand before each community
-                    opens.
+                    Scout will open paid checkout later. For now, this records demand for {tier.name} and helps us
+                    prioritize who to notify first.
                   </p>
                 </div>
 
@@ -135,7 +141,6 @@ export function SignupPage() {
                       City
                     </span>
                     <input
-                      required
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Brooklyn"
                     />
@@ -143,25 +148,16 @@ export function SignupPage() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/70">Main sport</span>
                     <input
-                      required
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Basketball, tennis, pickleball..."
                     />
                   </label>
                 </div>
 
-                <label className="space-y-2">
-                  <span className="text-sm text-white/70">What are you looking for?</span>
-                  <textarea
-                    className="min-h-32 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                    placeholder="Better pickup runs, consistent doubles partners, competitive brackets, post-game spots..."
-                  />
-                </label>
-
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/60">
-                  <Sparkles className="mb-3 h-5 w-5 text-violet-300" />
-                  This is interest capture for Free access and sport availability. Pro and Elite will use separate
-                  checkout pages when paid memberships are ready.
+                  <CreditCard className="mb-3 h-5 w-5 text-violet-300" />
+                  No payment is collected on this page. This is a checkout-intent reservation until paid
+                  memberships are ready to launch.
                 </div>
 
                 <button

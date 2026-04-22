@@ -108,7 +108,7 @@ export const pricingTiers = [
     badge: "Most popular",
     accent: "from-accent-purple/30 to-accent-blue/20",
     buttonLabel: "Go Pro",
-    signupPath: "/signup/pro",
+    signupPath: "/checkout/pro",
     featured: true,
     features: [
       "Advanced player filters",
@@ -129,7 +129,7 @@ export const pricingTiers = [
     badge: "Members only feel",
     accent: "from-fuchsia-500/30 to-accent-blue/25",
     buttonLabel: "Go Elite",
-    signupPath: "/signup/elite",
+    signupPath: "/checkout/elite",
     features: [
       "Everything in Pro",
       "Elite badge on profile",
