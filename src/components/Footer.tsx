@@ -16,7 +16,8 @@ export function Footer() {
               Build your local sports life around the people you actually want to play with.
             </h2>
             <p className="mt-4 max-w-2xl text-text-muted">
-              Scout brings local players, circles, brackets, and hotspots into one premium social sports app.
+              Scout brings player discovery, pickup coordination, trusted circles, flexible brackets, rankings, and
+              local sports hotspots into one premium social app.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Button href="/pricing" showArrow>

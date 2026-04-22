@@ -13,8 +13,8 @@ export function PricingPage() {
         <Container>
           <SectionHeading
             eyebrow="Pricing"
-            title="Simple memberships with room to grow"
-            description="Scout keeps the front door open, then layers in stronger discovery, visibility, and local status for players who want more."
+            title="Pick the plan that matches how often you play."
+            description="Start with the essentials for free, then upgrade when you want sharper discovery, more competitive context, and a higher-profile presence in your local scene."
             align="center"
           />
 
@@ -70,14 +70,15 @@ export function PricingPage() {
           </div>
 
           <div className="mt-12 rounded-[32px] border border-white/10 bg-white/[0.03] p-6 text-center text-sm text-text-muted sm:p-8">
-            Pricing is presented as a premium framing pass for the marketing site and can be adjusted later without restructuring the UI system.
+            Pro and Elite are built for players who want Scout to do more than find a match. They help you stand out,
+            track progress, access better competition, and unlock more of the local sports network around you.
           </div>
         </Container>
       </section>
 
       <CTASection
-        title="Start with Free. Upgrade when you want more control and more visibility."
-        description="Scout is designed to feel useful immediately, then more powerful as your local sports life gets more serious."
+        title="Start free. Go Pro or Elite when you want the edge."
+        description="Whether you play once a month or compete every week, Scout helps you find better people, better games, and better places to play."
         primaryLabel="Join Scout"
         primaryHref="/"
         secondaryLabel="See How It Works"

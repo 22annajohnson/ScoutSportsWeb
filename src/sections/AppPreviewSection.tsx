@@ -10,20 +10,20 @@ export function AppPreviewSection() {
           <GlassCard className="overflow-hidden p-7">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-white/40">Discovery + community</p>
-              <h3 className="mt-4 font-display text-3xl font-bold text-white">Your app, your crew, your local scene</h3>
+              <h3 className="mt-4 font-display text-3xl font-bold text-white">One place for players, crews, and local sports spots</h3>
               <p className="mt-4 text-white/70 leading-relaxed">
-                Showcase local courts, premium circles, restaurant partnerships, club access, and sports hotspots
-                with the same purple-blue visual system from the app.
+                Scout connects the full routine around pickup: player discovery, trusted circles, courts, clubs,
+                restaurants, and the places your crew already talks about after the match.
               </p>
             </div>
             <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
               {[
-                "Purple / blue glow",
-                "Large rounded cards",
-                "Premium dark UI",
-                "Map + discovery sections",
-                "Leaderboard energy",
-                "Social-first layouts",
+                "Nearby player matching",
+                "Private inner circles",
+                "Court and club discovery",
+                "Partner perks and drops",
+                "Leaderboard movement",
+                "Match-first social feed",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-white/80">
                   {item}
@@ -34,15 +34,15 @@ export function AppPreviewSection() {
 
           <GlassCard className="overflow-hidden bg-gradient-to-br from-violet-500/20 to-blue-500/15 p-7">
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">Homepage goal</p>
-              <h3 className="mt-4 font-display text-3xl font-bold text-white">Make people want in immediately</h3>
+              <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">Local momentum</p>
+              <h3 className="mt-4 font-display text-3xl font-bold text-white">Make every city feel like it already has a sports scene</h3>
               <p className="mt-4 text-white/70 leading-relaxed">
-                The site should not feel like a startup landing page. It should feel like a live local sports scene
-                you can join.
+                New players can see who is active, where games are happening, what circles are forming, and which
+                local spots are part of the experience before they ever send a message.
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              {["Launch concept", "Mobile-first layout"].map((item, index) => (
+              {["Find a game tonight", "Build your circle"].map((item, index) => (
                 <div
                   key={item}
                   className={`rounded-2xl px-4 py-3 text-sm ${
@@ -57,10 +57,10 @@ export function AppPreviewSection() {
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
-                "Live local energy",
-                "Player-first discovery",
-                "Premium social cues",
-                "Cleaner conversion path",
+                "Real-time player intent",
+                "Skill and vibe matching",
+                "Bracket-driven competition",
+                "Local rewards and hotspots",
               ].map((item) => (
                 <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-white/80">
                   {item}

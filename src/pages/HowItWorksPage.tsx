@@ -5,12 +5,12 @@ import { howItWorksSteps } from "@/data/site";
 import { CTASection } from "@/sections/CTASection";
 
 const extendedSteps = [
-  "Swipe through local players who fit your sport, level, and timing.",
-  "Match based on chemistry, skill, vibe, and neighborhood convenience.",
-  "Play pickup games, recurring runs, or bracket rounds when your schedule lines up.",
-  "Rank up through ratings, results, and city-level movement.",
-  "Build inner circles around the crews you actually want to play with again.",
-  "Discover courts, clubs, restaurants, and premium hotspots around your sports routine.",
+  "Browse players nearby with the sport, skill, availability, and location context you need up front.",
+  "Match with people who fit your pace, competitiveness, schedule, and neighborhood.",
+  "Turn a match into pickup, a recurring run, or an asynchronous bracket round.",
+  "Build reputation through ratings, results, profile badges, and city-level leaderboard movement.",
+  "Create inner circles for trusted teammates, favorite rivals, and crews you want to play with again.",
+  "Find courts, clubs, restaurants, recovery spots, and partner perks around your sports routine.",
 ];
 
 export function HowItWorksPage() {
@@ -20,8 +20,8 @@ export function HowItWorksPage() {
         <Container>
           <SectionHeading
             eyebrow="How It Works"
-            title="Scout keeps the path from discovering players to building a real local sports network tight."
-            description="The app is designed to feel immediate on day one and socially richer every week after."
+            title="From first swipe to regular run, Scout keeps the whole loop moving."
+            description="Discover compatible players, make the match, play the game, track the result, and build the circle that brings you back."
             align="center"
           />
 
@@ -58,8 +58,8 @@ export function HowItWorksPage() {
       </section>
 
       <CTASection
-        title="The more active your city is, the better Scout feels."
-        description="That is why the product is built around discovery, repeat play, local status, and community momentum instead of one-off scheduling."
+        title="Find one match today. Build your sports circle over time."
+        description="Scout is built for the full local sports habit: discovery, repeat play, friendly competition, social proof, and the places that make every game feel bigger."
         primaryLabel="View Pricing"
         primaryHref="/pricing"
         secondaryLabel="Partner With Scout"

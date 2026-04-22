@@ -12,8 +12,8 @@ export function PricingPreviewSection() {
         <div className="flex items-end justify-between gap-6">
           <SectionHeading
             eyebrow="Pricing"
-            title="Simple memberships with room to grow"
-            description="These plans are positioned to feel social and premium, while still being easy to understand quickly on the site."
+            title="Start free. Upgrade when your local game gets serious."
+            description="Scout is free for the basics, with paid tiers for players who want stronger filters, better visibility, deeper stats, and premium local perks."
           />
           <div className="hidden lg:block">
             <Button href="/pricing" variant="secondary">

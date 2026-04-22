@@ -12,7 +12,7 @@ export function BusinessPage() {
           <SectionHeading
             eyebrow="For Businesses and Clubs"
             title="Put your venue, offer, or brand inside the sports moments that already matter locally."
-            description="Scout creates a cleaner connection between active players and the businesses that shape their routines before, during, and after the game."
+            description="Scout helps restaurants, clubs, courts, trainers, and local sports businesses reach players while they are planning games, joining circles, and deciding where to go next."
             align="center"
           />
 
@@ -42,14 +42,15 @@ export function BusinessPage() {
           </div>
 
           <div className="mt-12 rounded-[32px] border border-white/10 bg-white/[0.03] p-6 text-center text-base leading-8 text-text-muted sm:p-8">
-            Early partnership opportunities can support sponsored placements, local offers, venue discovery, premium spotlights, and ecosystem visibility for clubs and community hubs.
+            Partner placements can highlight open courts, featured clubs, post-game offers, tournament weekends,
+            member perks, and neighborhood spots that make the local sports scene feel connected.
           </div>
         </Container>
       </section>
 
       <CTASection
-        title="Build local relevance instead of running generic ads."
-        description="Scout gives sports-focused businesses a more contextual way to reach active players and recurring communities."
+        title="Reach players when they are planning the next game."
+        description="Scout puts your business near the moments that drive real local activity: match discovery, court decisions, bracket play, and post-game plans."
         primaryLabel="Join Early Access"
         primaryHref="/pricing"
         secondaryLabel="See Home"
