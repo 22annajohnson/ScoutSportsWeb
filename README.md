@@ -36,6 +36,25 @@ npm run build
 npm run preview
 ```
 
+## Environment
+
+Copy `.env.example` to `.env.local` and fill in the Supabase values when marketing form persistence is ready:
+
+```bash
+cp .env.example .env.local
+```
+
+```text
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+The service role key should never be exposed in this frontend project.
+
+## Supabase Setup
+
+The SQL setup script is intentionally kept local and ignored by git. Use your local Supabase setup script in the Supabase SQL editor to create the marketing tables, indexes, and insert-only public RLS policies.
+
 ## Project Structure
 
 ```text

@@ -90,34 +90,14 @@ Source routes:
 - fallback capture from checkout pages if a paid tier is not available yet
 
 Recommended columns:
-
-```sql
-create table marketing_sport_interests (
-  id uuid primary key default gen_random_uuid(),
-  first_name text,
-  email text not null,
-  city text not null,
-  state_region text,
-  country text default 'US',
-  primary_sport text not null,
-  secondary_sports text[],
-  skill_level text,
-  play_frequency text,
-  looking_for text,
-  preferred_tier text check (preferred_tier in ('free', 'pro', 'elite')),
-  source_intent text not null default 'sport_interest',
-  launch_status_at_signup text default 'pre_release',
-  landing_path text,
-  submitted_path text,
-  referrer text,
-  utm_source text,
-  utm_medium text,
-  utm_campaign text,
-  utm_content text,
-  utm_term text,
-  created_at timestamptz not null default now()
-);
-```
+- identity: generated id, created timestamp
+- contact: first name, email
+- location: city, state/region, country
+- sports: primary sport, secondary sports
+- player context: skill level, play frequency, what they are looking for
+- plan preference: preferred tier as a preference only, not a subscription
+- source intent: free signup, sport interest, checkout fallback, or waitlist
+- attribution: landing path, submitted path, referrer, and UTM fields
 
 Notes:
 - `preferred_tier` is only a preference, not a subscription.
@@ -125,17 +105,9 @@ Notes:
 - `launch_status_at_signup` helps separate people waiting for unreleased sports from users signing up after launch.
 
 Recommended indexes:
-
-```sql
-create index marketing_sport_interests_email_idx
-  on marketing_sport_interests (email);
-
-create index marketing_sport_interests_sport_city_idx
-  on marketing_sport_interests (primary_sport, city);
-
-create index marketing_sport_interests_created_at_idx
-  on marketing_sport_interests (created_at desc);
-```
+- email
+- primary sport and city
+- created timestamp descending
 
 ### Table 2: `marketing_checkout_intents`
 
@@ -150,27 +122,12 @@ Source routes:
 - Pro and Elite CTA fallback forms
 
 Recommended columns:
-
-```sql
-create table marketing_checkout_intents (
-  id uuid primary key default gen_random_uuid(),
-  selected_tier text not null check (selected_tier in ('pro', 'elite')),
-  email text not null,
-  first_name text,
-  city text,
-  primary_sport text,
-  intent_status text not null default 'checkout_not_live',
-  checkout_path text,
-  landing_path text,
-  referrer text,
-  utm_source text,
-  utm_medium text,
-  utm_campaign text,
-  utm_content text,
-  utm_term text,
-  created_at timestamptz not null default now()
-);
-```
+- identity: generated id, created timestamp
+- selected tier: Pro or Elite only
+- contact: email, optional first name
+- optional sports context: city and primary sport
+- checkout status: checkout not live or checkout live
+- attribution: checkout path, landing path, referrer, and UTM fields
 
 Notes:
 - This table does not represent a paid subscription.
@@ -178,17 +135,9 @@ Notes:
 - Once Stripe is live, successful paid subscriptions should be written to app subscription tables, not only this marketing table.
 
 Recommended indexes:
-
-```sql
-create index marketing_checkout_intents_email_idx
-  on marketing_checkout_intents (email);
-
-create index marketing_checkout_intents_tier_idx
-  on marketing_checkout_intents (selected_tier);
-
-create index marketing_checkout_intents_created_at_idx
-  on marketing_checkout_intents (created_at desc);
-```
+- email
+- selected tier
+- created timestamp descending
 
 ### Table 3: `marketing_partner_leads`
 
@@ -201,28 +150,11 @@ Source routes:
 - future partnership landing pages
 
 Recommended columns:
-
-```sql
-create table marketing_partner_leads (
-  id uuid primary key default gen_random_uuid(),
-  contact_name text not null,
-  email text not null,
-  organization_name text not null,
-  organization_type text not null,
-  city text not null,
-  partnership_interest text,
-  notes text,
-  landing_path text,
-  submitted_path text,
-  referrer text,
-  utm_source text,
-  utm_medium text,
-  utm_campaign text,
-  utm_content text,
-  utm_term text,
-  created_at timestamptz not null default now()
-);
-```
+- identity: generated id, created timestamp
+- contact: contact name and email
+- organization: name, type, city
+- interest: partnership interest and notes
+- attribution: landing path, submitted path, referrer, and UTM fields
 
 ## Flow Definitions
 
@@ -306,31 +238,13 @@ Initial public permissions:
 - do not allow anonymous updates
 - do not allow anonymous deletes
 
-Example policy direction:
-
-```sql
-alter table marketing_sport_interests enable row level security;
-alter table marketing_checkout_intents enable row level security;
-alter table marketing_partner_leads enable row level security;
-
-create policy "Allow public sport interest inserts"
-  on marketing_sport_interests
-  for insert
-  to anon
-  with check (true);
-
-create policy "Allow public checkout intent inserts"
-  on marketing_checkout_intents
-  for insert
-  to anon
-  with check (true);
-
-create policy "Allow public partner lead inserts"
-  on marketing_partner_leads
-  for insert
-  to anon
-  with check (true);
-```
+Policy direction:
+- enable RLS on every marketing table
+- allow anonymous inserts only
+- do not allow anonymous reads
+- do not allow anonymous updates
+- do not allow anonymous deletes
+- keep the service role key out of this frontend project
 
 ## Frontend Implementation Plan
 
