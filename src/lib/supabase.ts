@@ -34,6 +34,7 @@ export type SportInterestInsert = {
   utm_campaign?: string;
   utm_content?: string;
   utm_term?: string;
+  honeypot_field?: string;
 };
 
 export type CheckoutIntentInsert = {
@@ -51,6 +52,7 @@ export type CheckoutIntentInsert = {
   utm_campaign?: string;
   utm_content?: string;
   utm_term?: string;
+  honeypot_field?: string;
 };
 
 export type PartnerLeadInsert = {
@@ -69,6 +71,7 @@ export type PartnerLeadInsert = {
   utm_campaign?: string;
   utm_content?: string;
   utm_term?: string;
+  honeypot_field?: string;
 };
 
 export function hasSupabaseConfig() {

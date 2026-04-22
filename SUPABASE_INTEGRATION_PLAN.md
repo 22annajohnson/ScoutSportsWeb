@@ -98,6 +98,7 @@ Recommended columns:
 - plan preference: preferred tier as a preference only, not a subscription
 - source intent: free signup, sport interest, checkout fallback, or waitlist
 - attribution: landing path, submitted path, referrer, and UTM fields
+- spam protection: optional honeypot field that must be empty
 
 Notes:
 - `preferred_tier` is only a preference, not a subscription.
@@ -128,6 +129,7 @@ Recommended columns:
 - optional sports context: city and primary sport
 - checkout status: checkout not live or checkout live
 - attribution: checkout path, landing path, referrer, and UTM fields
+- spam protection: optional honeypot field that must be empty
 
 Notes:
 - This table does not represent a paid subscription.
@@ -155,6 +157,7 @@ Recommended columns:
 - organization: name, type, city
 - interest: partnership interest and notes
 - attribution: landing path, submitted path, referrer, and UTM fields
+- spam protection: optional honeypot field that must be empty
 
 ## Flow Definitions
 
@@ -241,6 +244,7 @@ Initial public permissions:
 Policy direction:
 - enable RLS on every marketing table
 - allow anonymous inserts only
+- require the honeypot field to be null or empty on anonymous inserts
 - do not allow anonymous reads
 - do not allow anonymous updates
 - do not allow anonymous deletes
@@ -302,6 +306,14 @@ Checkout intent validation:
 - valid email
 - optional sport and city
 - no payment fields until real checkout is ready
+
+Spam protection:
+- include a visually hidden honeypot input with a realistic name such as `company`
+- do not use `type="hidden"` for the honeypot field
+- set `tabindex="-1"` and `autocomplete="off"`
+- block or ignore submissions where the honeypot has any value
+- reject submissions that happen unrealistically quickly after form render
+- consider stronger rate limiting or an Edge Function if spam appears
 
 Partner lead validation:
 - valid email
