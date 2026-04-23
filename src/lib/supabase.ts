@@ -46,7 +46,6 @@ export type CheckoutIntentInsert = {
   intent_status?: "checkout_not_live" | "checkout_live";
   checkout_path?: string;
   landing_path?: string;
-  submitted_path?: string;
   referrer?: string;
   utm_source?: string;
   utm_medium?: string;
