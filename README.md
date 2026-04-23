@@ -38,16 +38,7 @@ npm run preview
 
 ## Environment
 
-Copy `.env.example` to `.env.local` and fill in the Supabase values when marketing form persistence is ready:
-
-```bash
-cp .env.example .env.local
-```
-
-```text
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-```
+Fill the Supabase values in within `.env.local` when marketing form persistence is ready:
 
 The service role key should never be exposed in this frontend project.
 
