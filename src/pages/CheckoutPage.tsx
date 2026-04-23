@@ -6,6 +6,7 @@ import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
+import { getSignupPath, routes } from "@/lib/routes";
 import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertCheckoutIntent } from "@/lib/supabase";
 
@@ -34,7 +35,7 @@ export function CheckoutPage() {
   const tier = pricingTiers.find((plan) => plan.slug === selectedTier);
 
   if (!tier || !selectedTier) {
-    return <Navigate to="/pricing" replace />;
+    return <Navigate to={routes.pricing} replace />;
   }
 
   const resolvedTier: "pro" | "elite" = selectedTier;
@@ -83,7 +84,7 @@ export function CheckoutPage() {
   return (
     <section className="py-16 sm:py-20">
       <Container>
-        <Button href="/pricing" variant="ghost" className="mb-8 px-0">
+        <Button href={routes.pricing} variant="ghost" className="mb-8 px-0">
           <ChevronLeft className="h-4 w-4" />
           Back to pricing
         </Button>
@@ -138,8 +139,8 @@ export function CheckoutPage() {
                   create an active subscription yet.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Button href="/signup/free">Join Free interest</Button>
-                  <Button href="/how-it-works" variant="secondary">
+                  <Button href={getSignupPath("free")}>Join Free interest</Button>
+                  <Button href={routes.howItWorks} variant="secondary">
                     See how Scout works
                   </Button>
                 </div>

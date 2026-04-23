@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { navLinks } from "@/data/site";
+import { routes } from "@/lib/routes";
 import { Button } from "./Button";
 import { Container } from "./Container";
 
@@ -12,7 +13,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 pt-6">
       <Container>
         <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-xl">
-          <NavLink to="/" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
+          <NavLink to={routes.home} className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-purple to-accent-blue shadow-glow">
               <span className="font-display text-base font-black text-white">S</span>
             </div>
@@ -37,7 +38,7 @@ export function Navbar() {
           </nav>
 
           <div className="hidden lg:block">
-            <Button href="/pricing" className="px-5">
+            <Button href={routes.pricing} className="px-5">
               Join Waitlist
             </Button>
           </div>
@@ -71,7 +72,7 @@ export function Navbar() {
                 {link.label}
               </NavLink>
             ))}
-            <Button href="/pricing" className="mt-2" variant="primary">
+            <Button href={routes.pricing} className="mt-2" variant="primary">
               Join Waitlist
             </Button>
           </div>

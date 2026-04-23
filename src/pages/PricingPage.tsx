@@ -4,6 +4,7 @@ import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { SectionHeading } from "@/components/SectionHeading";
 import { pricingTiers } from "@/data/site";
+import { routes } from "@/lib/routes";
 import { CTASection } from "@/sections/CTASection";
 
 export function PricingPage() {
@@ -80,9 +81,9 @@ export function PricingPage() {
         title="Start free. Go Pro or Elite when you want the edge."
         description="Whether you play once a month or compete every week, Scout helps you find better people, better games, and better places to play."
         primaryLabel="Join Scout"
-        primaryHref="/"
+        primaryHref={routes.home}
         secondaryLabel="See How It Works"
-        secondaryHref="/how-it-works"
+        secondaryHref={routes.howItWorks}
       />
     </>
   );

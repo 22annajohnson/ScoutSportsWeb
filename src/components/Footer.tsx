@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { navLinks } from "@/data/site";
+import { routes } from "@/lib/routes";
 import { Button } from "./Button";
 import { Container } from "./Container";
 
@@ -20,10 +21,10 @@ export function Footer() {
               local sports hotspots into one premium social app.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Button href="/pricing" showArrow>
+              <Button href={routes.pricing} showArrow>
                 View Pricing
               </Button>
-              <Button href="/business" variant="secondary">
+              <Button href={routes.business} variant="secondary">
                 Partner With Scout
               </Button>
             </div>

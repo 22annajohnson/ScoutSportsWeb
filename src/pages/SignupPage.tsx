@@ -6,6 +6,7 @@ import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
+import { routes } from "@/lib/routes";
 import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertSportInterest } from "@/lib/supabase";
 
@@ -27,7 +28,7 @@ export function SignupPage() {
   const tier = pricingTiers.find((plan) => plan.slug === tierId);
 
   if (!tier || tierId !== "free") {
-    return <Navigate to="/pricing" replace />;
+    return <Navigate to={routes.pricing} replace />;
   }
 
   const copy = tierNotes.free;
@@ -76,7 +77,7 @@ export function SignupPage() {
   return (
     <section className="py-16 sm:py-20">
       <Container>
-        <Button href="/pricing" variant="ghost" className="mb-8 px-0">
+        <Button href={routes.pricing} variant="ghost" className="mb-8 px-0">
           <ChevronLeft className="h-4 w-4" />
           Back to pricing
         </Button>
@@ -131,8 +132,8 @@ export function SignupPage() {
                   local communities, and the next sports to support.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Button href="/how-it-works">See how Scout works</Button>
-                  <Button href="/business" variant="secondary">
+                  <Button href={routes.howItWorks}>See how Scout works</Button>
+                  <Button href={routes.business} variant="secondary">
                     Partner with Scout
                   </Button>
                 </div>

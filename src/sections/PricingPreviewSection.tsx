@@ -4,6 +4,7 @@ import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { SectionHeading } from "@/components/SectionHeading";
 import { pricingTiers } from "@/data/site";
+import { routes } from "@/lib/routes";
 
 export function PricingPreviewSection() {
   return (
@@ -16,7 +17,7 @@ export function PricingPreviewSection() {
             description="Scout is free for the basics, with paid tiers for players who want stronger filters, better visibility, deeper stats, and premium local perks."
           />
           <div className="hidden lg:block">
-            <Button href="/pricing" variant="secondary">
+            <Button href={routes.pricing} variant="secondary">
               Compare plans
             </Button>
           </div>

@@ -3,6 +3,7 @@ import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { SectionHeading } from "@/components/SectionHeading";
 import { businessCategories } from "@/data/site";
+import { routes } from "@/lib/routes";
 
 export function BusinessPreviewSection() {
   return (
@@ -23,7 +24,7 @@ export function BusinessPreviewSection() {
               </GlassCard>
             ))}
             <div className="pt-2">
-              <Button href="/business" showArrow>
+              <Button href={routes.business} showArrow>
                 Explore partnerships
               </Button>
             </div>
