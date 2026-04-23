@@ -5,7 +5,9 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
+import { getMarketingAttribution } from "@/lib/attribution";
 import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
+import { hasSupabaseConfig, insertCheckoutIntent } from "@/lib/supabase";
 
 const checkoutCopy = {
   pro: {
@@ -25,23 +27,57 @@ const checkoutCopy = {
 export function CheckoutPage() {
   const { tierId } = useParams();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [formMountedAt] = useState(() => Date.now());
-  const tier = pricingTiers.find((plan) => plan.slug === tierId);
+  const selectedTier = tierId === "pro" || tierId === "elite" ? tierId : null;
+  const tier = pricingTiers.find((plan) => plan.slug === selectedTier);
 
-  if (!tier || tierId !== "pro" && tierId !== "elite") {
+  if (!tier || !selectedTier) {
     return <Navigate to="/pricing" replace />;
   }
 
-  const copy = checkoutCopy[tierId];
+  const resolvedTier: "pro" | "elite" = selectedTier;
+  const copy = checkoutCopy[resolvedTier];
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (shouldBlockSuspiciousSubmission(event, formMountedAt)) {
       return;
     }
 
-    setIsSubmitted(true);
+    if (!hasSupabaseConfig()) {
+      setErrorMessage("Supabase is not configured yet. Add your local env values and reload the page.");
+      return;
+    }
+
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    const attribution = getMarketingAttribution();
+
+    try {
+      await insertCheckoutIntent({
+        selected_tier: resolvedTier,
+        email: String(formData.get("email") ?? "").trim(),
+        first_name: String(formData.get("first_name") ?? "").trim(),
+        city: String(formData.get("city") ?? "").trim(),
+        primary_sport: String(formData.get("primary_sport") ?? "").trim(),
+        intent_status: "checkout_not_live",
+        checkout_path: window.location.pathname,
+        honeypot_field: String(formData.get("company") ?? "").trim(),
+        ...attribution,
+      });
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Something went wrong while saving your checkout interest. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -126,6 +162,7 @@ export function CheckoutPage() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/70">First name</span>
                     <input
+                      name="first_name"
                       required
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Alex"
@@ -134,6 +171,7 @@ export function CheckoutPage() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/70">Email</span>
                     <input
+                      name="email"
                       required
                       type="email"
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
@@ -149,6 +187,7 @@ export function CheckoutPage() {
                       City
                     </span>
                     <input
+                      name="city"
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Brooklyn"
                     />
@@ -156,6 +195,7 @@ export function CheckoutPage() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/70">Main sport</span>
                     <input
+                      name="primary_sport"
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Basketball, tennis, pickleball..."
                     />
@@ -168,11 +208,18 @@ export function CheckoutPage() {
                   memberships are ready to launch.
                 </div>
 
+                {errorMessage ? (
+                  <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
+                    {errorMessage}
+                  </div>
+                ) : null}
+
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-accent-purple to-accent-blue px-6 py-5 text-base font-semibold text-white shadow-glow transition hover:scale-[1.01] hover:opacity-95"
                 >
-                  {copy.submitLabel}
+                  {isSubmitting ? "Saving..." : copy.submitLabel}
                 </button>
               </form>
             )}

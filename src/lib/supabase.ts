@@ -46,6 +46,7 @@ export type CheckoutIntentInsert = {
   intent_status?: "checkout_not_live" | "checkout_live";
   checkout_path?: string;
   landing_path?: string;
+  submitted_path?: string;
   referrer?: string;
   utm_source?: string;
   utm_medium?: string;
@@ -76,4 +77,28 @@ export type PartnerLeadInsert = {
 
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
+}
+
+export async function insertSportInterest(payload: SportInterestInsert) {
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { error } = await supabase.from("marketing_sport_interests").insert(payload);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function insertCheckoutIntent(payload: CheckoutIntentInsert) {
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { error } = await supabase.from("marketing_checkout_intents").insert(payload);
+
+  if (error) {
+    throw error;
+  }
 }
