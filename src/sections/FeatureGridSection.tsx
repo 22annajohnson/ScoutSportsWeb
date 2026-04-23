@@ -8,23 +8,22 @@ export function FeatureGridSection() {
     <section className="py-20">
       <Container>
         <SectionHeading
-          eyebrow="Features"
-          title="Built for players who want more than just another group chat."
-          description="Scout blends discovery, social identity, competition, and local utility into a product that feels premium from the first screen."
-          align="center"
+          eyebrow="Why it works"
+          title="Find better games without chasing group chats"
+          description="Scout gives players a real local sports graph: who is nearby, who fits your level, where people are playing, and which circles are worth joining."
         />
 
-        <div className="mt-14 grid gap-5 md:grid-cols-2">
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
           {featureHighlights.map((feature) => {
             const Icon = feature.icon;
 
             return (
-              <GlassCard key={feature.title} className="p-8">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 text-white">
-                  <Icon className="h-6 w-6" />
+              <GlassCard key={feature.title} className="p-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/30 to-blue-500/30 text-violet-200">
+                  <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="mt-8 font-display text-3xl font-semibold text-white">{feature.title}</h3>
-                <p className="mt-4 max-w-xl text-base leading-7 text-text-muted">{feature.description}</p>
+                <h3 className="mt-6 font-display text-2xl font-bold text-white">{feature.title}</h3>
+                <p className="mt-4 max-w-xl text-base leading-relaxed text-white/68">{feature.description}</p>
               </GlassCard>
             );
           })}

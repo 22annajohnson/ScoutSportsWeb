@@ -12,8 +12,8 @@ export function PricingPreviewSection() {
         <div className="flex items-end justify-between gap-6">
           <SectionHeading
             eyebrow="Pricing"
-            title="Free to enter. Premium if you want the sharper edge."
-            description="Scout is designed to be accessible at the front door and premium where visibility, discovery, and competition matter most."
+            title="Start free. Upgrade when your local game gets serious."
+            description="Scout is free for the basics, with paid tiers for players who want stronger filters, better visibility, deeper stats, and premium local perks."
           />
           <div className="hidden lg:block">
             <Button href="/pricing" variant="secondary">
@@ -26,27 +26,41 @@ export function PricingPreviewSection() {
           {pricingTiers.map((tier) => (
             <GlassCard
               key={tier.name}
-              className={`relative overflow-hidden p-8 ${tier.featured ? "border-accent-purple/40 bg-white/[0.05] shadow-glow" : ""}`}
+              className={`relative overflow-hidden p-7 ${tier.featured ? "border-violet-400/40 shadow-[0_20px_80px_rgba(124,58,237,0.28)]" : ""}`}
             >
-              <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${tier.accent} opacity-60 blur-2xl`} />
+              <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${tier.accent} opacity-80 blur-3xl`} />
               <div className="relative">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="font-display text-3xl font-semibold text-white">{tier.name}</div>
-                    <div className="mt-2 text-sm text-text-muted">{tier.description}</div>
+                {tier.featured ? (
+                  <div className="absolute right-0 top-0">
+                    <div className="rounded-full border border-violet-300/20 bg-violet-500/20 px-3 py-2 text-xs text-violet-200">
+                      Most Popular
+                    </div>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white">
-                    {tier.badge}
-                  </div>
+                ) : null}
+
+                <div>
+                  <div className="text-sm uppercase tracking-[0.3em] text-white/45">Membership</div>
+                  <div className="mt-3 font-display text-3xl font-black text-white">{tier.name}</div>
+                  <div className="mt-2 text-white/65">{tier.subtitle}</div>
                 </div>
+
                 <div className="mt-8 flex items-end gap-1">
-                  <span className="font-display text-5xl font-semibold text-white">{tier.price}</span>
-                  <span className="pb-1 text-sm text-text-muted">{tier.cadence ?? ""}</span>
+                  <span className="font-display text-5xl font-black text-white">{tier.price}</span>
+                  <span className="mb-1 text-sm text-white/50">{tier.cadence ?? ""}</span>
+                </div>
+                <div className="mt-6">
+                  <Button
+                    href={tier.signupPath}
+                    className={`w-full py-6 text-base ${tier.featured ? "" : "bg-white/10 text-white shadow-none hover:bg-white/15"}`}
+                    variant={tier.featured ? "primary" : "secondary"}
+                  >
+                    {tier.buttonLabel}
+                  </Button>
                 </div>
                 <div className="mt-8 space-y-3">
                   {tier.features.map((feature) => (
-                    <div key={feature} className="flex items-center gap-3 text-sm text-text-muted">
-                      <Check className="h-4 w-4 text-accent-blue" />
+                    <div key={feature} className="flex items-start gap-3 text-white/80">
+                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-violet-300" />
                       <span>{feature}</span>
                     </div>
                   ))}

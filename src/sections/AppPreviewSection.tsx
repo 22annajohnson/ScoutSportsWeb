@@ -6,68 +6,68 @@ export function AppPreviewSection() {
   return (
     <section className="py-20">
       <Container>
-        <SectionHeading
-          eyebrow="Inside the app"
-          title="A sports product that feels social before it feels transactional."
-          description="Every surface is built to move players from discovery to game-time faster, with enough status, identity, and local context to keep the community sticky."
-          align="center"
-        />
-
-        <div className="mt-14 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <GlassCard className="flex min-h-[420px] flex-col justify-between bg-gradient-to-br from-accent-purple/10 to-transparent p-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <GlassCard className="overflow-hidden p-7">
             <div>
-              <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.32em] text-text-muted">
-                Player profile
-              </div>
-              <h3 className="mt-5 font-display text-3xl font-semibold text-white">Visibility, status, and chemistry cues in one place.</h3>
+              <p className="text-sm uppercase tracking-[0.3em] text-white/40">Discovery + community</p>
+              <h3 className="mt-4 font-display text-3xl font-bold text-white">One place for players, crews, and local sports spots</h3>
+              <p className="mt-4 text-white/70 leading-relaxed">
+                Scout connects the full routine around pickup: player discovery, trusted circles, courts, clubs,
+                restaurants, and the places your crew already talks about after the match.
+              </p>
             </div>
-            <div className="grid gap-4">
-              <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                <div className="text-sm text-text-muted">Profile signals</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {["Elite badge", "88% reply rate", "Late-night runs", "Hoops + tennis"].map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs text-white"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
+              {[
+                "Nearby player matching",
+                "Private inner circles",
+                "Court and club discovery",
+                "Partner perks and drops",
+                "Leaderboard movement",
+                "Match-first social feed",
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-white/80">
+                  {item}
                 </div>
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                <div className="text-sm text-text-muted">Recent movement</div>
-                <div className="mt-3 font-display text-2xl font-semibold text-white">+12 city ranking this week</div>
-              </div>
+              ))}
             </div>
           </GlassCard>
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            {[
-              {
-                title: "Swipe stack",
-                description: "Fast local discovery with stronger filters and a more intentional social graph.",
-              },
-              {
-                title: "Circles feed",
-                description: "Private crews, recurring sessions, and shared momentum around the people you trust.",
-              },
-              {
-                title: "Bracket progress",
-                description: "Automated asynchronous competition that fits around real schedules.",
-              },
-              {
-                title: "Hotspot map",
-                description: "Discover clubs, courts, food, and premium partner spots around every match.",
-              },
-            ].map((card) => (
-              <GlassCard key={card.title} className="min-h-[200px] p-6">
-                <div className="text-xs uppercase tracking-[0.28em] text-text-muted">Scout surface</div>
-                <h3 className="mt-4 font-display text-2xl font-semibold text-white">{card.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-text-muted">{card.description}</p>
-              </GlassCard>
-            ))}
-          </div>
+          <GlassCard className="overflow-hidden bg-gradient-to-br from-violet-500/20 to-blue-500/15 p-7">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">Local momentum</p>
+              <h3 className="mt-4 font-display text-3xl font-bold text-white">Make every city feel like it already has a sports scene</h3>
+              <p className="mt-4 text-white/70 leading-relaxed">
+                New players can see who is active, where games are happening, what circles are forming, and which
+                local spots are part of the experience before they ever send a message.
+              </p>
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {["Find a game tonight", "Build your circle"].map((item, index) => (
+                <div
+                  key={item}
+                  className={`rounded-2xl px-4 py-3 text-sm ${
+                    index === 0
+                      ? "bg-gradient-to-r from-accent-purple to-accent-blue text-white"
+                      : "border border-white/10 bg-white/5 text-white"
+                  }`}
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {[
+                "Real-time player intent",
+                "Skill and vibe matching",
+                "Bracket-driven competition",
+                "Local rewards and hotspots",
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-white/80">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </GlassCard>
         </div>
       </Container>
     </section>
