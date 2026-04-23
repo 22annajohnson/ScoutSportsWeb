@@ -5,6 +5,7 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
+import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
 
 const tierNotes = {
   free: {
@@ -18,6 +19,7 @@ const tierNotes = {
 export function SignupPage() {
   const { tierId } = useParams();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formMountedAt] = useState(() => Date.now());
   const tier = pricingTiers.find((plan) => plan.slug === tierId);
 
   if (!tier || tierId !== "free") {
@@ -28,6 +30,11 @@ export function SignupPage() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (shouldBlockSuspiciousSubmission(event, formMountedAt)) {
+      return;
+    }
+
     setIsSubmitted(true);
   }
 
@@ -96,7 +103,8 @@ export function SignupPage() {
                 </div>
               </div>
             ) : (
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form className="relative space-y-6" onSubmit={handleSubmit}>
+                <HoneypotField />
                 <div>
                   <p className="text-sm uppercase tracking-[0.3em] text-white/45">Launch interest</p>
                   <h2 className="mt-3 font-display text-4xl font-black tracking-tight text-white">

@@ -5,6 +5,7 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
+import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
 
 const checkoutCopy = {
   pro: {
@@ -24,6 +25,7 @@ const checkoutCopy = {
 export function CheckoutPage() {
   const { tierId } = useParams();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formMountedAt] = useState(() => Date.now());
   const tier = pricingTiers.find((plan) => plan.slug === tierId);
 
   if (!tier || tierId !== "pro" && tierId !== "elite") {
@@ -34,6 +36,11 @@ export function CheckoutPage() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (shouldBlockSuspiciousSubmission(event, formMountedAt)) {
+      return;
+    }
+
     setIsSubmitted(true);
   }
 
@@ -102,7 +109,8 @@ export function CheckoutPage() {
                 </div>
               </div>
             ) : (
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form className="relative space-y-6" onSubmit={handleSubmit}>
+                <HoneypotField />
                 <div>
                   <p className="text-sm uppercase tracking-[0.3em] text-white/45">Checkout not live</p>
                   <h2 className="mt-3 font-display text-4xl font-black tracking-tight text-white">
