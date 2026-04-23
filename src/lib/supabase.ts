@@ -102,3 +102,15 @@ export async function insertCheckoutIntent(payload: CheckoutIntentInsert) {
     throw error;
   }
 }
+
+export async function insertPartnerLead(payload: PartnerLeadInsert) {
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { error } = await supabase.from("marketing_partner_leads").insert(payload);
+
+  if (error) {
+    throw error;
+  }
+}
