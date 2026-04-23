@@ -71,7 +71,7 @@ export function Navbar() {
                 {link.label}
               </NavLink>
             ))}
-            <Button href="/pricing" className="mt-2" variant="primary">
+            <Button href="/pricing" className="mt-2" variant="primary" onClick={() => setIsOpen(false)}>
               Join Waitlist
             </Button>
           </div>
