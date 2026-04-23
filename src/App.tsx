@@ -5,6 +5,7 @@ import { BusinessPage } from "@/pages/BusinessPage";
 import { CheckoutPage } from "@/pages/CheckoutPage";
 import { HomePage } from "@/pages/HomePage";
 import { HowItWorksPage } from "@/pages/HowItWorksPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PricingPage } from "@/pages/PricingPage";
 import { SignupPage } from "@/pages/SignupPage";
 
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/checkout/:tierId" element={<CheckoutPage />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/business" element={<BusinessPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </>
