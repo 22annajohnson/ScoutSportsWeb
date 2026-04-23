@@ -56,7 +56,7 @@ export function CheckoutPage() {
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const { submitted_path: _submittedPath, ...attribution } = getMarketingAttribution();
+    const attribution = getMarketingAttribution();
 
     try {
       await insertCheckoutIntent({
