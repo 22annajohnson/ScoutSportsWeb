@@ -5,7 +5,9 @@ import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
+import { getMarketingAttribution } from "@/lib/attribution";
 import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
+import { hasSupabaseConfig, insertSportInterest } from "@/lib/supabase";
 
 const tierNotes = {
   free: {
@@ -19,6 +21,8 @@ const tierNotes = {
 export function SignupPage() {
   const { tierId } = useParams();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [formMountedAt] = useState(() => Date.now());
   const tier = pricingTiers.find((plan) => plan.slug === tierId);
 
@@ -28,14 +32,45 @@ export function SignupPage() {
 
   const copy = tierNotes.free;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (shouldBlockSuspiciousSubmission(event, formMountedAt)) {
       return;
     }
 
-    setIsSubmitted(true);
+    if (!hasSupabaseConfig()) {
+      setErrorMessage("Supabase is not configured yet. Add your local env values and reload the page.");
+      return;
+    }
+
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    const attribution = getMarketingAttribution();
+
+    try {
+      await insertSportInterest({
+        first_name: String(formData.get("first_name") ?? "").trim(),
+        email: String(formData.get("email") ?? "").trim(),
+        city: String(formData.get("city") ?? "").trim(),
+        primary_sport: String(formData.get("primary_sport") ?? "").trim(),
+        looking_for: String(formData.get("looking_for") ?? "").trim(),
+        preferred_tier: "free",
+        source_intent: "free_signup",
+        launch_status_at_signup: "pre_release",
+        honeypot_field: String(formData.get("company") ?? "").trim(),
+        ...attribution,
+      });
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Something went wrong while saving your interest. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -120,6 +155,7 @@ export function SignupPage() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/70">First name</span>
                     <input
+                      name="first_name"
                       required
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Alex"
@@ -128,6 +164,7 @@ export function SignupPage() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/70">Email</span>
                     <input
+                      name="email"
                       required
                       type="email"
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
@@ -143,6 +180,7 @@ export function SignupPage() {
                       City
                     </span>
                     <input
+                      name="city"
                       required
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Brooklyn"
@@ -151,6 +189,7 @@ export function SignupPage() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/70">Main sport</span>
                     <input
+                      name="primary_sport"
                       required
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Basketball, tennis, pickleball..."
@@ -161,10 +200,17 @@ export function SignupPage() {
                 <label className="space-y-2">
                   <span className="text-sm text-white/70">What are you looking for?</span>
                   <textarea
+                    name="looking_for"
                     className="min-h-32 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                     placeholder="Better pickup runs, consistent doubles partners, competitive brackets, post-game spots..."
                   />
                 </label>
+
+                {errorMessage ? (
+                  <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
+                    {errorMessage}
+                  </div>
+                ) : null}
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/60">
                   <Sparkles className="mb-3 h-5 w-5 text-violet-300" />
@@ -174,9 +220,10 @@ export function SignupPage() {
 
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-accent-purple to-accent-blue px-6 py-5 text-base font-semibold text-white shadow-glow transition hover:scale-[1.01] hover:opacity-95"
                 >
-                  {copy.submitLabel}
+                  {isSubmitting ? "Saving..." : copy.submitLabel}
                 </button>
               </form>
             )}
