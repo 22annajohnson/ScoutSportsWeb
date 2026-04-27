@@ -1,15 +1,23 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { routes } from "@/lib/routes";
+import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 import { getPortalProfileSnapshot, portalPlayer, portalProfileDraftSeed, type PortalProfileDraft } from "./mockPortal";
 
 const STORAGE_KEY = "scout.portal.demoSession";
-const PROFILE_STORAGE_KEY = "scout.portal.profileDraft";
+const PROFILE_STORAGE_KEY_PREFIX = "scout.portal.profileDraft";
 
-function getPlayerFromProfile(profile: PortalProfileDraft) {
+function getProfileStorageKey(identity: string) {
+  return `${PROFILE_STORAGE_KEY_PREFIX}.${identity}`;
+}
+
+function getPlayerFromProfile(profile: PortalProfileDraft, user: User | null) {
   const nameParts = profile.fullName.trim().split(/\s+/).filter(Boolean);
   const initials = nameParts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "SC";
 
   return {
     ...portalPlayer,
+    email: user?.email ?? portalPlayer.email,
     firstName: nameParts[0] ?? portalPlayer.firstName,
     fullName: profile.fullName,
     location: profile.city,
@@ -21,10 +29,13 @@ function getPlayerFromProfile(profile: PortalProfileDraft) {
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
+  isSupabaseAuthEnabled: boolean;
+  authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
   saveProfile: (nextProfile: PortalProfileDraft) => Promise<void>;
   resetProfile: () => void;
+  signInWithEmail: (email: string) => Promise<void>;
   signInAsDemo: () => void;
   signOut: () => void;
 };
@@ -34,38 +45,107 @@ const PortalSessionContext = createContext<PortalSessionContextValue | null>(nul
 export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authSession, setAuthSession] = useState<Session | null>(null);
   const [profileDraft, setProfileDraft] = useState<PortalProfileDraft>(portalProfileDraftSeed);
+  const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
+
+  const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem(STORAGE_KEY);
-    const storedProfile = window.localStorage.getItem(PROFILE_STORAGE_KEY);
 
-    if (storedProfile) {
-      try {
-        const parsed = JSON.parse(storedProfile) as PortalProfileDraft;
-        setProfileDraft(parsed);
-      } catch (error) {
-        console.error("Unable to parse stored portal profile draft", error);
-      }
+    if (!isSupabaseAuthEnabled || !supabase) {
+      setIsAuthenticated(storedValue === "active");
+      setIsReady(true);
+      return;
     }
 
-    setIsAuthenticated(storedValue === "active");
-    setIsReady(true);
-  }, []);
+    const supabaseClient = supabase;
+
+    let isMounted = true;
+
+    async function loadSession() {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error("Unable to load Supabase portal session", error);
+      }
+
+      if (!isMounted) {
+        return;
+      }
+
+      const session = data.session;
+      setAuthSession(session);
+      setAuthUser(session?.user ?? null);
+      setIsAuthenticated(Boolean(session?.user) || storedValue === "active");
+      setIsReady(true);
+    }
+
+    const { data: authListener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setAuthSession(session);
+      setAuthUser(session?.user ?? null);
+      setIsAuthenticated(Boolean(session?.user) || window.localStorage.getItem(STORAGE_KEY) === "active");
+      setIsReady(true);
+    });
+
+    void loadSession();
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [isSupabaseAuthEnabled]);
+
+  useEffect(() => {
+    const storedProfile = window.localStorage.getItem(getProfileStorageKey(identityKey));
+
+    if (!storedProfile) {
+      setProfileDraft(portalProfileDraftSeed);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(storedProfile) as PortalProfileDraft;
+      setProfileDraft(parsed);
+    } catch (error) {
+      console.error("Unable to parse stored portal profile draft", error);
+      setProfileDraft(portalProfileDraftSeed);
+    }
+  }, [identityKey]);
 
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
       isAuthenticated,
-      player: isAuthenticated ? getPlayerFromProfile(profileDraft) : null,
+      isSupabaseAuthEnabled,
+      authUser,
+      player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
       saveProfile: async (nextProfile) => {
         setProfileDraft(nextProfile);
-        window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+        window.localStorage.setItem(getProfileStorageKey(identityKey), JSON.stringify(nextProfile));
       },
       resetProfile: () => {
         setProfileDraft(portalProfileDraftSeed);
-        window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+        window.localStorage.removeItem(getProfileStorageKey(identityKey));
+      },
+      signInWithEmail: async (email) => {
+        if (!supabase) {
+          throw new Error("Supabase auth is not configured.");
+        }
+
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}${routes.portal}`,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
       },
       signInAsDemo: () => {
         window.localStorage.setItem(STORAGE_KEY, "active");
@@ -73,10 +153,17 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       },
       signOut: () => {
         window.localStorage.removeItem(STORAGE_KEY);
+
+        if (authSession && supabase) {
+          void supabase.auth.signOut();
+        }
+
+        setAuthSession(null);
+        setAuthUser(null);
         setIsAuthenticated(false);
       },
     }),
-    [isAuthenticated, isReady, profileDraft],
+    [authSession, authUser, identityKey, isAuthenticated, isReady, isSupabaseAuthEnabled, profileDraft],
   );
 
   return <PortalSessionContext.Provider value={value}>{children}</PortalSessionContext.Provider>;
