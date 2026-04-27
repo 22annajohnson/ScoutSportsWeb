@@ -15,7 +15,7 @@ const portalNav = [
 ];
 
 export function PortalLayout() {
-  const { player, signOut } = usePortalSession();
+  const { authUser, player, signOut } = usePortalSession();
 
   if (!player) {
     return null;
@@ -35,6 +35,7 @@ export function PortalLayout() {
                 <p className="mt-4 text-xs uppercase tracking-[0.3em] text-white/45">Player portal</p>
                 <h1 className="mt-2 font-display text-3xl font-black text-white">{player.fullName}</h1>
                 <p className="mt-2 text-sm text-white/60">{player.location}</p>
+                <p className="mt-1 text-xs text-white/45">{authUser?.email ?? player.email}</p>
                 <div className="mt-4 inline-flex rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-2 text-sm text-violet-200">
                   {portalMembership.tier} member
                 </div>
@@ -70,7 +71,7 @@ export function PortalLayout() {
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
               >
                 <LogOut className="h-4 w-4" />
-                Exit demo session
+                Sign out
               </button>
             </GlassCard>
 
