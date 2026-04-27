@@ -8,6 +8,7 @@ type ButtonProps = {
   variant?: "primary" | "secondary" | "ghost";
   className?: string;
   showArrow?: boolean;
+  onClick?: () => void;
 };
 
 const variants = {
@@ -24,10 +25,12 @@ export function Button({
   variant = "primary",
   className = "",
   showArrow = false,
+  onClick,
 }: ButtonProps) {
   return (
     <Link
       to={href}
+      onClick={onClick}
       className={`inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition duration-300 ${variants[variant]} ${className}`}
     >
       {children}
