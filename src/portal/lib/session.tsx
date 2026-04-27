@@ -1,12 +1,30 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { portalPlayer } from "./mockPortal";
+import { getPortalProfileSnapshot, portalPlayer, portalProfileDraftSeed, type PortalProfileDraft } from "./mockPortal";
 
 const STORAGE_KEY = "scout.portal.demoSession";
+const PROFILE_STORAGE_KEY = "scout.portal.profileDraft";
+
+function getPlayerFromProfile(profile: PortalProfileDraft) {
+  const nameParts = profile.fullName.trim().split(/\s+/).filter(Boolean);
+  const initials = nameParts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "SC";
+
+  return {
+    ...portalPlayer,
+    firstName: nameParts[0] ?? portalPlayer.firstName,
+    fullName: profile.fullName,
+    location: profile.city,
+    headline: profile.bio,
+    avatarInitials: initials,
+  };
+}
 
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
-  player: typeof portalPlayer | null;
+  player: ReturnType<typeof getPlayerFromProfile> | null;
+  profile: ReturnType<typeof getPortalProfileSnapshot> | null;
+  saveProfile: (nextProfile: PortalProfileDraft) => Promise<void>;
+  resetProfile: () => void;
   signInAsDemo: () => void;
   signOut: () => void;
 };
@@ -16,9 +34,21 @@ const PortalSessionContext = createContext<PortalSessionContextValue | null>(nul
 export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [profileDraft, setProfileDraft] = useState<PortalProfileDraft>(portalProfileDraftSeed);
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem(STORAGE_KEY);
+    const storedProfile = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+
+    if (storedProfile) {
+      try {
+        const parsed = JSON.parse(storedProfile) as PortalProfileDraft;
+        setProfileDraft(parsed);
+      } catch (error) {
+        console.error("Unable to parse stored portal profile draft", error);
+      }
+    }
+
     setIsAuthenticated(storedValue === "active");
     setIsReady(true);
   }, []);
@@ -27,7 +57,16 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       isReady,
       isAuthenticated,
-      player: isAuthenticated ? portalPlayer : null,
+      player: isAuthenticated ? getPlayerFromProfile(profileDraft) : null,
+      profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
+      saveProfile: async (nextProfile) => {
+        setProfileDraft(nextProfile);
+        window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+      },
+      resetProfile: () => {
+        setProfileDraft(portalProfileDraftSeed);
+        window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+      },
       signInAsDemo: () => {
         window.localStorage.setItem(STORAGE_KEY, "active");
         setIsAuthenticated(true);
@@ -37,7 +76,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(false);
       },
     }),
-    [isAuthenticated, isReady],
+    [isAuthenticated, isReady, profileDraft],
   );
 
   return <PortalSessionContext.Provider value={value}>{children}</PortalSessionContext.Provider>;
