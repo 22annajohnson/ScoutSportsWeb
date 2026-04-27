@@ -72,7 +72,7 @@ export function PortalOverviewPage() {
               },
               {
                 title: "Stats and history",
-                text: "Real player metrics, recent matches, and bracket results will replace the preview data here.",
+                text: "The portal now has fuller stats and history surfaces, ready to be swapped from preview data to real account-scoped reads.",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
