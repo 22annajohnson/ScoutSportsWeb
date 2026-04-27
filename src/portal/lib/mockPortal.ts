@@ -10,6 +10,11 @@ export type PortalMembership = {
   renewalLabel: string;
   billingSummary: string;
   manageLabel: string;
+  billingSource: string;
+  cadence: string;
+  priceLabel: string;
+  paymentMethod: string;
+  syncedAccessNote: string;
 };
 
 export type PortalProfileSnapshot = {
@@ -44,6 +49,14 @@ export type PortalHistoryItem = {
   ratingDelta: string;
 };
 
+export type PortalInvoiceItem = {
+  id: string;
+  dateLabel: string;
+  amountLabel: string;
+  status: "Paid" | "Pending" | "Refunded";
+  description: string;
+};
+
 export const portalPlayer = {
   firstName: "Alyssa",
   fullName: "Alyssa Carter",
@@ -60,7 +73,43 @@ export const portalMembership: PortalMembership = {
   renewalLabel: "Renews May 21, 2026",
   billingSummary: "Monthly plan billed online. In-app upgrades will sync here once billing is unified.",
   manageLabel: "Manage membership",
+  billingSource: "Web billing preview",
+  cadence: "Monthly",
+  priceLabel: "$9.99 / month",
+  paymentMethod: "Visa ending in 4242",
+  syncedAccessNote: "When billing is fully connected, upgrades made in-app or on the web should resolve into this same membership record.",
 };
+
+export const portalMembershipBenefits = [
+  "Advanced player filters and better fit matching",
+  "Priority bracket access and stronger ranking visibility",
+  "Expanded profile stats and discovery context",
+  "Pro badge and premium access state across the Scout ecosystem",
+];
+
+export const portalInvoiceHistory: PortalInvoiceItem[] = [
+  {
+    id: "INV-2048",
+    dateLabel: "April 21, 2026",
+    amountLabel: "$9.99",
+    status: "Paid",
+    description: "Scout Pro monthly renewal",
+  },
+  {
+    id: "INV-1984",
+    dateLabel: "March 21, 2026",
+    amountLabel: "$9.99",
+    status: "Paid",
+    description: "Scout Pro monthly renewal",
+  },
+  {
+    id: "INV-1920",
+    dateLabel: "February 21, 2026",
+    amountLabel: "$9.99",
+    status: "Paid",
+    description: "Scout Pro monthly start",
+  },
+];
 
 export const portalProfileDraftSeed: PortalProfileDraft = {
   fullName: "Alyssa Carter",
