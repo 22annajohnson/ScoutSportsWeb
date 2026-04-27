@@ -33,10 +33,10 @@ export default function App() {
         >
           <Route element={<PortalLayout />}>
             <Route index element={<PortalOverviewPage />} />
-            <Route path="membership" element={<PortalMembershipPage />} />
-            <Route path="profile" element={<PortalProfilePage />} />
-            <Route path="stats" element={<PortalStatsPage />} />
-            <Route path="history" element={<PortalHistoryPage />} />
+            <Route path="business" element={<PortalProfilePage />} />
+            <Route path="billing" element={<PortalMembershipPage />} />
+            <Route path="team" element={<PortalStatsPage />} />
+            <Route path="activity" element={<PortalHistoryPage />} />
           </Route>
         </Route>
         <Route element={<SiteLayout />}>

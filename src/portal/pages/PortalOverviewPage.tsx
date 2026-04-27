@@ -1,45 +1,68 @@
-import { ArrowUpRight, Clock3, Sparkles, Trophy, UserRound } from "lucide-react";
+import { ArrowUpRight, BadgeDollarSign, Building2, ShieldCheck, Users2 } from "lucide-react";
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { routes } from "@/lib/routes";
-import { portalHistoryPreview, portalMembership, portalStatsSnapshot } from "../lib/mockPortal";
+import { portalNextSteps } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
 import { usePortalSession } from "../lib/session";
 
 export function PortalOverviewPage() {
-  const { player, profile } = usePortalSession();
+  const { billing, business, team, user } = usePortalSession();
 
-  if (!player || !profile) {
+  if (!user || !business || !billing) {
     return null;
   }
+
+  const activeMembers = team.filter((member) => member.status === "Active").length;
+  const invitedMembers = team.filter((member) => member.status === "Invited").length;
 
   return (
     <>
       <PortalPageHeader
-        eyebrow="Account home"
-        title={`Welcome back, ${player.firstName}.`}
-        description="This first portal shell is designed to feel like the Scout product on the web. It gives players one place to manage membership, update identity details, and review performance context."
+        eyebrow="Workspace home"
+        title={`Welcome back, ${user.firstName}.`}
+        description="Phase 1 establishes the business account foundation: workspace identity, team access, billing readiness, and a review trail for sensitive changes."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/45">Membership</p>
-            <p className="mt-2 text-2xl font-black text-white">{portalMembership.tier}</p>
-            <p className="mt-1 text-sm text-violet-200">{portalMembership.status}</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/45">Verification</p>
+            <p className="mt-2 text-2xl font-black text-white">{business.verificationStatus}</p>
+            <p className="mt-1 text-sm text-emerald-200">{business.businessStatus}</p>
           </div>
         }
       />
 
       <div className="grid gap-5 xl:grid-cols-4">
         {[
-          { label: "Scout score", value: String(portalStatsSnapshot.scoutScore), detail: portalStatsSnapshot.recentTrend, icon: Trophy },
-          { label: "Profile completion", value: `${profile.completionPercent}%`, detail: `${profile.primarySport} • ${profile.city}`, icon: UserRound },
-          { label: "Renewal", value: "May 21", detail: portalMembership.billingSummary, icon: Clock3 },
-          { label: "Recent form", value: "4 of 5", detail: portalStatsSnapshot.record, icon: Sparkles },
+          {
+            label: "Profile completion",
+            value: `${business.completionPercent}%`,
+            detail: `${business.locations.length} locations listed`,
+            icon: Building2,
+          },
+          {
+            label: "Active team members",
+            value: String(activeMembers),
+            detail: invitedMembers > 0 ? `${invitedMembers} invite pending` : "No pending invites",
+            icon: Users2,
+          },
+          {
+            label: "Plan and billing",
+            value: billing.planName,
+            detail: billing.renewalLabel,
+            icon: BadgeDollarSign,
+          },
+          {
+            label: "Spend guardrail",
+            value: billing.spendCapLabel,
+            detail: billing.monthlyBudgetLabel,
+            icon: ShieldCheck,
+          },
         ].map((item) => {
           const Icon = item.icon;
 
           return (
             <GlassCard key={item.label} className="p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 text-violet-200">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-400/20 to-sky-500/20 text-emerald-200">
                 <Icon className="h-5 w-5" />
               </div>
               <p className="mt-5 text-sm text-white/60">{item.label}</p>
@@ -54,25 +77,46 @@ export function PortalOverviewPage() {
         <GlassCard className="p-7">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/45">What ships next</p>
-              <h3 className="mt-3 font-display text-3xl font-black text-white">Portal roadmap in motion.</h3>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/45">Launch checklist</p>
+              <h3 className="mt-3 font-display text-3xl font-black text-white">Phase 1 readiness.</h3>
             </div>
-            <ArrowUpRight className="mt-1 h-5 w-5 text-violet-200" />
+            <ArrowUpRight className="mt-1 h-5 w-5 text-emerald-200" />
           </div>
 
           <div className="mt-6 grid gap-4">
+            {portalNextSteps.map((item) => (
+              <div key={item} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5 text-sm leading-7 text-white/70">
+                {item}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button href={routes.portalBusiness} className="px-6 py-4">
+              Complete business profile
+            </Button>
+            <Button href={routes.portalTeam} variant="secondary" className="px-6 py-4">
+              Review team access
+            </Button>
+          </div>
+        </GlassCard>
+
+        <GlassCard className="p-7">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/45">Workspace snapshot</p>
+          <h3 className="mt-3 font-display text-3xl font-black text-white">What is already in place</h3>
+          <div className="mt-6 grid gap-4">
             {[
               {
-                title: "Profile editing",
-                text: "Players can now update bio, city, sports, availability, vibe tags, and public identity inside the portal flow.",
+                title: "Business identity",
+                text: "Your public-facing business details now live in one editable settings flow with verification context.",
               },
               {
-                title: "Membership and billing",
-                text: "Stripe or another billing source will become the account truth for upgrades made online or in-app.",
+                title: "Team controls",
+                text: "Owners can invite teammates, assign roles, and pause access without leaving the portal shell.",
               },
               {
-                title: "Stats and history",
-                text: "Real player metrics, recent matches, and bracket results will replace the preview data here.",
+                title: "Billing foundation",
+                text: "Billing contact, payment method, plan status, and invoice history are ready to connect to a real provider next.",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
@@ -81,31 +125,6 @@ export function PortalOverviewPage() {
               </div>
             ))}
           </div>
-        </GlassCard>
-
-        <GlassCard className="p-7">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/45">Recent activity preview</p>
-          <h3 className="mt-3 font-display text-3xl font-black text-white">Game history snapshot</h3>
-          <div className="mt-6 grid gap-4">
-            {portalHistoryPreview.map((item) => (
-              <div key={`${item.title}-${item.dateLabel}`} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-white/55">{item.dateLabel}</p>
-                    <h4 className="mt-1 text-lg font-semibold text-white">{item.title}</h4>
-                  </div>
-                  <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/80">
-                    {item.result}
-                  </div>
-                </div>
-                <p className="mt-3 text-sm leading-7 text-white/65">{item.detail}</p>
-                <p className="mt-3 text-sm font-semibold text-violet-200">{item.ratingDelta} rating</p>
-              </div>
-            ))}
-          </div>
-          <Button href={routes.portalHistory} variant="secondary" className="mt-6 w-full">
-            Open history page
-          </Button>
         </GlassCard>
       </div>
     </>

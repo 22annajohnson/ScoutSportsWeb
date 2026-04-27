@@ -1,139 +1,99 @@
-export type PortalNavItem = {
-  label: string;
-  href: string;
+export type PortalBusinessStatus = "Active" | "Pending verification" | "Needs review";
+export type PortalVerificationStatus = "Verified" | "Under review" | "Needs documents";
+export type TeamMemberRole = "Owner" | "Manager" | "Analyst" | "Billing Admin";
+export type TeamMemberStatus = "Active" | "Invited" | "Paused";
+export type InvoiceStatus = "Paid" | "Pending" | "Action required";
+
+export type PortalBusinessProfileSnapshot = {
+  displayName: string;
+  legalName: string;
+  slug: string;
+  category: string;
+  supportEmail: string;
+  phone: string;
+  website: string;
   description: string;
-};
-
-export type PortalMembership = {
-  tier: "Pro" | "Elite" | "Free";
-  status: "Active" | "Trialing" | "Pending renewal";
-  renewalLabel: string;
-  billingSummary: string;
-  manageLabel: string;
-  billingSource: string;
-  cadence: string;
-  priceLabel: string;
-  paymentMethod: string;
-  syncedAccessNote: string;
-};
-
-export type PortalProfileSnapshot = {
-  fullName: string;
-  username: string;
-  city: string;
-  primarySport: string;
-  secondarySports: string[];
-  skillLevel: string;
-  bio: string;
-  availability: string;
-  vibeTags: string[];
+  locations: string[];
   completionPercent: number;
+  verificationStatus: PortalVerificationStatus;
+  businessStatus: PortalBusinessStatus;
 };
 
-export type PortalProfileDraft = Omit<PortalProfileSnapshot, "completionPercent">;
+export type PortalBusinessProfileDraft = Omit<
+  PortalBusinessProfileSnapshot,
+  "completionPercent" | "verificationStatus" | "businessStatus"
+>;
 
-export type PortalStatsSnapshot = {
-  scoutScore: number;
-  cityRank: string;
-  record: string;
-  streak: string;
-  bracketFinish: string;
-  recentTrend: string;
+export type PortalWorkspaceMember = {
+  id: string;
+  name: string;
+  email: string;
+  role: TeamMemberRole;
+  status: TeamMemberStatus;
+  lastActive: string;
 };
 
-export type PortalHistoryItem = {
-  title: string;
-  dateLabel: string;
-  result: string;
-  detail: string;
-  ratingDelta: string;
+export type PortalBillingSettings = {
+  planName: string;
+  planStatus: "Active" | "Trialing";
+  renewalLabel: string;
+  monthlyBudgetLabel: string;
+  spendCapLabel: string;
+  paymentMethod: string;
+  billingContactEmail: string;
+  billingAddress: string;
+  taxIdStatus: string;
 };
 
 export type PortalInvoiceItem = {
   id: string;
   dateLabel: string;
   amountLabel: string;
-  status: "Paid" | "Pending" | "Refunded";
+  status: InvoiceStatus;
   description: string;
 };
 
-export const portalPlayer = {
-  firstName: "Alyssa",
-  fullName: "Alyssa Carter",
-  email: "alyssa@scoutsports.app",
-  location: "Brooklyn, NY",
-  avatarInitials: "AC",
-  memberSince: "Joined March 2026",
-  headline: "Competitive pickleball and tennis player looking for weeknight runs.",
+export type PortalActivityItem = {
+  id: string;
+  title: string;
+  actor: string;
+  dateLabel: string;
+  detail: string;
+  type: "billing" | "team" | "profile" | "verification";
 };
 
-export const portalMembership: PortalMembership = {
-  tier: "Pro",
-  status: "Active",
-  renewalLabel: "Renews May 21, 2026",
-  billingSummary: "Monthly plan billed online. In-app upgrades will sync here once billing is unified.",
-  manageLabel: "Manage membership",
-  billingSource: "Web billing preview",
-  cadence: "Monthly",
-  priceLabel: "$9.99 / month",
-  paymentMethod: "Visa ending in 4242",
-  syncedAccessNote: "When billing is fully connected, upgrades made in-app or on the web should resolve into this same membership record.",
+export const portalBusinessOwner = {
+  firstName: "Maya",
+  fullName: "Maya Thompson",
+  email: "maya@harborfit.co",
+  avatarInitials: "MT",
+  memberSince: "Workspace created April 2026",
 };
 
-export const portalMembershipBenefits = [
-  "Advanced player filters and better fit matching",
-  "Priority bracket access and stronger ranking visibility",
-  "Expanded profile stats and discovery context",
-  "Pro badge and premium access state across the Scout ecosystem",
-];
-
-export const portalInvoiceHistory: PortalInvoiceItem[] = [
-  {
-    id: "INV-2048",
-    dateLabel: "April 21, 2026",
-    amountLabel: "$9.99",
-    status: "Paid",
-    description: "Scout Pro monthly renewal",
-  },
-  {
-    id: "INV-1984",
-    dateLabel: "March 21, 2026",
-    amountLabel: "$9.99",
-    status: "Paid",
-    description: "Scout Pro monthly renewal",
-  },
-  {
-    id: "INV-1920",
-    dateLabel: "February 21, 2026",
-    amountLabel: "$9.99",
-    status: "Paid",
-    description: "Scout Pro monthly start",
-  },
-];
-
-export const portalProfileDraftSeed: PortalProfileDraft = {
-  fullName: "Alyssa Carter",
-  username: "@alyssaplays",
-  city: "Brooklyn, NY",
-  primarySport: "Pickleball",
-  secondarySports: ["Tennis", "Padel"],
-  skillLevel: "Beginner+ to competitive social",
-  bio: "Love fast doubles games, consistent weeknight matches, and crews that keep the energy high.",
-  availability: "Weeknights after 6pm, Saturday mornings",
-  vibeTags: ["Competitive", "Reliable", "Weeknights", "Social after"],
+export const portalBusinessProfileDraftSeed: PortalBusinessProfileDraft = {
+  displayName: "Harbor Fit Social Club",
+  legalName: "Harbor Fit Group LLC",
+  slug: "harbor-fit-social-club",
+  category: "Fitness studio and community club",
+  supportEmail: "team@harborfit.co",
+  phone: "(718) 555-0144",
+  website: "https://harborfit.co",
+  description:
+    "Neighborhood fitness club hosting classes, social leagues, and recurring local events across Brooklyn.",
+  locations: ["Williamsburg, Brooklyn", "Greenpoint, Brooklyn"],
 };
 
-export function getProfileCompletionPercent(profile: PortalProfileDraft) {
+export function getBusinessCompletionPercent(profile: PortalBusinessProfileDraft) {
   const checks = [
-    profile.fullName,
-    profile.username,
-    profile.city,
-    profile.primarySport,
-    profile.skillLevel,
-    profile.bio,
-    profile.availability,
-    profile.secondarySports.length > 0 ? "yes" : "",
-    profile.vibeTags.length > 0 ? "yes" : "",
+    profile.displayName,
+    profile.legalName,
+    profile.slug,
+    profile.category,
+    profile.supportEmail,
+    profile.phone,
+    profile.website,
+    profile.description,
+    profile.locations.length > 0 ? "yes" : "",
   ];
 
   const completedFields = checks.filter((item) => String(item).trim().length > 0).length;
@@ -141,42 +101,123 @@ export function getProfileCompletionPercent(profile: PortalProfileDraft) {
   return Math.round((completedFields / checks.length) * 100);
 }
 
-export function getPortalProfileSnapshot(profile: PortalProfileDraft): PortalProfileSnapshot {
+export function getPortalBusinessSnapshot(profile: PortalBusinessProfileDraft): PortalBusinessProfileSnapshot {
   return {
     ...profile,
-    completionPercent: getProfileCompletionPercent(profile),
+    completionPercent: getBusinessCompletionPercent(profile),
+    verificationStatus: "Under review",
+    businessStatus: "Active",
   };
 }
 
-export const portalStatsSnapshot: PortalStatsSnapshot = {
-  scoutScore: 92,
-  cityRank: "#12 in Brooklyn pickleball",
-  record: "18 wins • 7 losses",
-  streak: "Won 4 of last 5",
-  bracketFinish: "2 semifinal finishes this month",
-  recentTrend: "+7 rating over the last 30 days",
+export const portalBillingSeed: PortalBillingSettings = {
+  planName: "Growth",
+  planStatus: "Active",
+  renewalLabel: "Renews May 19, 2026",
+  monthlyBudgetLabel: "$1,800 monthly ad budget",
+  spendCapLabel: "$2,500 account spend cap",
+  paymentMethod: "Visa ending in 4242",
+  billingContactEmail: "finance@harborfit.co",
+  billingAddress: "204 Kent Ave, Brooklyn, NY 11249",
+  taxIdStatus: "W-9 on file",
 };
 
-export const portalHistoryPreview: PortalHistoryItem[] = [
+export const portalTeamSeed: PortalWorkspaceMember[] = [
   {
-    title: "Thursday night doubles run",
-    dateLabel: "April 24, 2026",
-    result: "Win",
-    detail: "McCarren Park • Pickleball • Matched with Mia and Zoe",
-    ratingDelta: "+4",
+    id: "team-1",
+    name: "Maya Thompson",
+    email: "maya@harborfit.co",
+    role: "Owner",
+    status: "Active",
+    lastActive: "2 minutes ago",
   },
   {
-    title: "Scout bracket quarterfinal",
-    dateLabel: "April 21, 2026",
-    result: "Win",
-    detail: "Brooklyn racket club • Bracket play",
-    ratingDelta: "+2",
+    id: "team-2",
+    name: "Jared Ellis",
+    email: "jared@harborfit.co",
+    role: "Manager",
+    status: "Active",
+    lastActive: "Today at 1:18 PM",
   },
   {
-    title: "After-work challenge match",
+    id: "team-3",
+    name: "Priya Shah",
+    email: "priya@harborfit.co",
+    role: "Billing Admin",
+    status: "Active",
+    lastActive: "Yesterday",
+  },
+  {
+    id: "team-4",
+    name: "Open invitation",
+    email: "partnerships@harborfit.co",
+    role: "Analyst",
+    status: "Invited",
+    lastActive: "Invite sent today",
+  },
+];
+
+export const portalInvoicesSeed: PortalInvoiceItem[] = [
+  {
+    id: "INV-4021",
     dateLabel: "April 18, 2026",
-    result: "Loss",
-    detail: "Prospect Heights • Tennis singles",
-    ratingDelta: "-1",
+    amountLabel: "$499.00",
+    status: "Paid",
+    description: "Growth plan monthly subscription",
   },
+  {
+    id: "INV-3968",
+    dateLabel: "April 12, 2026",
+    amountLabel: "$725.00",
+    status: "Paid",
+    description: "Sponsored campaign spend settlement",
+  },
+  {
+    id: "INV-3910",
+    dateLabel: "March 18, 2026",
+    amountLabel: "$499.00",
+    status: "Paid",
+    description: "Growth plan monthly subscription",
+  },
+];
+
+export const portalActivitySeed: PortalActivityItem[] = [
+  {
+    id: "activity-1",
+    title: "Business profile submitted for verification",
+    actor: "Maya Thompson",
+    dateLabel: "Today at 10:12 AM",
+    detail: "Updated legal business name, support email, and added a second location for review.",
+    type: "verification",
+  },
+  {
+    id: "activity-2",
+    title: "Ad budget cap increased",
+    actor: "Priya Shah",
+    dateLabel: "Yesterday at 4:40 PM",
+    detail: "Raised monthly spend cap from $2,000 to $2,500 for the spring promo window.",
+    type: "billing",
+  },
+  {
+    id: "activity-3",
+    title: "New team member invited",
+    actor: "Jared Ellis",
+    dateLabel: "Yesterday at 11:05 AM",
+    detail: "Sent an Analyst invite to partnerships@harborfit.co.",
+    type: "team",
+  },
+  {
+    id: "activity-4",
+    title: "Business description updated",
+    actor: "Maya Thompson",
+    dateLabel: "April 21, 2026",
+    detail: "Refined the public description to better position Harbor Fit classes and social leagues.",
+    type: "profile",
+  },
+];
+
+export const portalNextSteps = [
+  "Complete business verification so promotions and notifications can be approved faster.",
+  "Invite teammates who will own ads, billing, and content before launch week.",
+  "Confirm your billing contact and payment method before enabling spend-based tools.",
 ];

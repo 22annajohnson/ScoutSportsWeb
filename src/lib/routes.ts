@@ -8,10 +8,10 @@ export const routes = {
   signup: "/signup/:tierId",
   checkout: "/checkout/:tierId",
   portal: "/portal",
-  portalMembership: "/portal/membership",
-  portalProfile: "/portal/profile",
-  portalStats: "/portal/stats",
-  portalHistory: "/portal/history",
+  portalBusiness: "/portal/business",
+  portalBilling: "/portal/billing",
+  portalTeam: "/portal/team",
+  portalActivity: "/portal/activity",
 } as const;
 
 export function getSignupPath(tierId: TierSlug) {

@@ -1,20 +1,82 @@
-import { CreditCard, ReceiptText, ShieldCheck, Sparkles, Star, WalletCards } from "lucide-react";
-import { Button } from "@/components/Button";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { CreditCard, ReceiptText, ShieldCheck, WalletCards } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
-import { routes } from "@/lib/routes";
-import { portalInvoiceHistory, portalMembership, portalMembershipBenefits } from "../lib/mockPortal";
+import { type PortalBillingSettings } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
+import { usePortalSession } from "../lib/session";
 
 export function PortalMembershipPage() {
+  const { billing, invoices, saveBillingSettings } = usePortalSession();
+  const [formState, setFormState] = useState<PortalBillingSettings | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (billing) {
+      setFormState(billing);
+    }
+  }, [billing]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!billing || !formState) {
+      return false;
+    }
+
+    return JSON.stringify(billing) !== JSON.stringify(formState);
+  }, [billing, formState]);
+
+  if (!billing || !formState) {
+    return null;
+  }
+
+  function updateField<K extends keyof PortalBillingSettings>(field: K, value: PortalBillingSettings[K]) {
+    setFormState((current) => (current ? { ...current, [field]: value } : current));
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaveMessage("");
+    setErrorMessage("");
+
+    if (!formState) {
+      return;
+    }
+
+    if (!formState.billingContactEmail.includes("@")) {
+      setErrorMessage("Billing contact email must be valid.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      await saveBillingSettings({
+        ...formState,
+        billingContactEmail: formState.billingContactEmail.trim().toLowerCase(),
+        billingAddress: formState.billingAddress.trim(),
+        paymentMethod: formState.paymentMethod.trim(),
+        monthlyBudgetLabel: formState.monthlyBudgetLabel.trim(),
+        spendCapLabel: formState.spendCapLabel.trim(),
+      });
+      setSaveMessage("Billing settings saved for the demo workspace.");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Something went wrong while saving billing settings.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <>
       <PortalPageHeader
-        eyebrow="Membership"
-        title="Membership and billing visibility."
-        description="This shell is ready for a third-party billing source such as Stripe. Upgrades made online or in-app should eventually resolve into one normalized membership state here."
+        eyebrow="Billing"
+        title="Billing controls and spend readiness."
+        description="Phase 1 gives business owners one place to review plan state, payment details, budget guardrails, and recent invoices before a real billing provider is wired in."
         aside={
-          <div className="rounded-2xl border border-blue-300/20 bg-blue-500/10 px-4 py-4 text-sm text-blue-200">
-            Billing integration planned
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
+            {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
           </div>
         }
       />
@@ -22,32 +84,32 @@ export function PortalMembershipPage() {
       <div className="grid gap-5 xl:grid-cols-[1fr_0.92fr]">
         <div className="grid gap-5">
           <GlassCard className="relative overflow-hidden p-7">
-            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-accent-purple/25 via-fuchsia-500/10 to-accent-blue/20 blur-3xl" />
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-emerald-400/20 via-cyan-400/10 to-sky-500/20 blur-3xl" />
             <div className="relative">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 text-violet-200">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-400/20 to-sky-500/20 text-emerald-200">
                     <CreditCard className="h-5 w-5" />
                   </div>
                   <p className="mt-5 text-xs uppercase tracking-[0.3em] text-white/45">Current plan</p>
-                  <h3 className="mt-3 font-display text-5xl font-black text-white">{portalMembership.tier}</h3>
-                  <p className="mt-3 inline-flex rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-2 text-sm text-violet-200">
-                    {portalMembership.status}
+                  <h3 className="mt-3 font-display text-5xl font-black text-white">{billing.planName}</h3>
+                  <p className="mt-3 inline-flex rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+                    {billing.planStatus}
                   </p>
                 </div>
                 <div className="rounded-[1.5rem] border border-white/10 bg-black/20 px-5 py-4 text-right">
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/45">Billing cadence</p>
-                  <p className="mt-2 text-2xl font-black text-white">{portalMembership.priceLabel}</p>
-                  <p className="mt-1 text-sm text-white/60">{portalMembership.cadence}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/45">Budget posture</p>
+                  <p className="mt-2 text-2xl font-black text-white">{billing.monthlyBudgetLabel}</p>
+                  <p className="mt-1 text-sm text-white/60">{billing.spendCapLabel}</p>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {[
-                  ["Renews", portalMembership.renewalLabel],
-                  ["Billing source", portalMembership.billingSource],
-                  ["Payment method", portalMembership.paymentMethod],
-                  ["Membership sync", portalMembership.syncedAccessNote],
+                  ["Renews", billing.renewalLabel],
+                  ["Payment method", billing.paymentMethod],
+                  ["Billing contact", billing.billingContactEmail],
+                  ["Tax status", billing.taxIdStatus],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                     <p className="text-sm text-white/45">{label}</p>
@@ -55,34 +117,90 @@ export function PortalMembershipPage() {
                   </div>
                 ))}
               </div>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button href={routes.pricing} className="px-6 py-4">
-                  Upgrade membership
-                </Button>
-                <Button href={routes.portal} variant="secondary" className="px-6 py-4">
-                  Back to portal
-                </Button>
-              </div>
             </div>
           </GlassCard>
 
           <GlassCard className="p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/45">Included with {portalMembership.tier}</p>
-                <h3 className="mt-3 font-display text-3xl font-black text-white">Membership benefits</h3>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/45">Editable billing record</p>
+                <h3 className="mt-3 font-display text-3xl font-black text-white">Billing settings</h3>
               </div>
-              <Star className="mt-1 h-5 w-5 text-violet-200" />
+              <WalletCards className="mt-1 h-5 w-5 text-emerald-200" />
             </div>
 
-            <div className="mt-6 grid gap-4">
-              {portalMembershipBenefits.map((benefit) => (
-                <div key={benefit} className="rounded-[1.5rem] border border-white/10 bg-black/20 px-5 py-4 text-white/75">
-                  {benefit}
-                </div>
-              ))}
-            </div>
+            <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-sm text-white/70">Billing contact email</span>
+                  <input
+                    value={formState.billingContactEmail}
+                    onChange={(event) => updateField("billingContactEmail", event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50"
+                    placeholder="finance@harborfit.co"
+                  />
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm text-white/70">Payment method label</span>
+                  <input
+                    value={formState.paymentMethod}
+                    onChange={(event) => updateField("paymentMethod", event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50"
+                    placeholder="Visa ending in 4242"
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-sm text-white/70">Monthly budget label</span>
+                  <input
+                    value={formState.monthlyBudgetLabel}
+                    onChange={(event) => updateField("monthlyBudgetLabel", event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50"
+                    placeholder="$1,800 monthly ad budget"
+                  />
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm text-white/70">Spend cap label</span>
+                  <input
+                    value={formState.spendCapLabel}
+                    onChange={(event) => updateField("spendCapLabel", event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50"
+                    placeholder="$2,500 account spend cap"
+                  />
+                </label>
+              </div>
+
+              <label className="space-y-2">
+                <span className="text-sm text-white/70">Billing address</span>
+                <input
+                  value={formState.billingAddress}
+                  onChange={(event) => updateField("billingAddress", event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50"
+                  placeholder="204 Kent Ave, Brooklyn, NY 11249"
+                />
+              </label>
+
+              <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
+                <p className="text-sm leading-7 text-white/65">
+                  A real integration should make Stripe or another provider the source of truth for subscription state,
+                  invoices, payment methods, retries, and renewal timing. This page is the front-end contract for that
+                  future system.
+                </p>
+              </div>
+
+              {errorMessage ? <p className="text-sm text-rose-300">{errorMessage}</p> : null}
+              {saveMessage ? <p className="text-sm text-emerald-200">{saveMessage}</p> : null}
+
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSaving ? "Saving..." : "Save billing settings"}
+              </button>
+            </form>
           </GlassCard>
         </div>
 
@@ -90,18 +208,18 @@ export function PortalMembershipPage() {
           {[
             {
               icon: ShieldCheck,
-              title: "Single membership truth",
-              text: "The next billing pass should reconcile web checkout and in-app upgrades into one normalized account-level membership record.",
+              title: "Spend guardrails",
+              text: "The portal should ultimately control who can increase budget caps, approve payment changes, and enable new billable features.",
             },
             {
               icon: WalletCards,
-              title: "What a future billing source should own",
-              text: "Subscription state, plan changes, invoice generation, renewal timing, payment method, and cancellation status should come from the billing provider rather than marketing-site forms.",
+              title: "Provider-owned state",
+              text: "Plan transitions, retry logic, invoices, and subscription lifecycle events should come from the billing provider, not from local form state.",
             },
             {
               icon: ReceiptText,
               title: "Invoice history preview",
-              text: "This page is already designed to hold a real billing timeline once Stripe or another provider is connected.",
+              text: "This list is shaped to become the normalized invoice timeline once the backend is connected.",
             },
           ].map((item) => {
             const Icon = item.icon;
@@ -123,11 +241,11 @@ export function PortalMembershipPage() {
                 <p className="text-xs uppercase tracking-[0.3em] text-white/45">Billing history</p>
                 <h3 className="mt-3 font-display text-3xl font-black text-white">Recent invoices</h3>
               </div>
-              <Sparkles className="mt-1 h-5 w-5 text-violet-200" />
+              <ReceiptText className="mt-1 h-5 w-5 text-emerald-200" />
             </div>
 
             <div className="mt-6 grid gap-4">
-              {portalInvoiceHistory.map((invoice) => (
+              {invoices.map((invoice) => (
                 <div key={invoice.id} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
