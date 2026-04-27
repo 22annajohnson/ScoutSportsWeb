@@ -6,7 +6,7 @@ import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
-import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
+import { getSuspiciousSubmissionMessage, HoneypotField } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertCheckoutIntent } from "@/lib/supabase";
 
 const checkoutCopy = {
@@ -43,7 +43,10 @@ export function CheckoutPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (shouldBlockSuspiciousSubmission(event, formMountedAt)) {
+    const suspiciousSubmissionMessage = getSuspiciousSubmissionMessage(event, formMountedAt);
+
+    if (suspiciousSubmissionMessage) {
+      setErrorMessage(suspiciousSubmissionMessage);
       return;
     }
 

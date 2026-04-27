@@ -2,15 +2,23 @@ import type { FormEvent } from "react";
 
 const MIN_SUBMIT_TIME_MS = 900;
 
-export function shouldBlockSuspiciousSubmission(
+export function getSuspiciousSubmissionMessage(
   event: FormEvent<HTMLFormElement>,
   formMountedAt: number,
-) {
+): string | null {
   const formData = new FormData(event.currentTarget);
   const honeypotValue = String(formData.get("company") ?? formData.get("website") ?? "").trim();
   const submittedTooQuickly = Date.now() - formMountedAt < MIN_SUBMIT_TIME_MS;
 
-  return Boolean(honeypotValue || submittedTooQuickly);
+  if (honeypotValue) {
+    return "We could not verify that submission. Please refresh the page and try again.";
+  }
+
+  if (submittedTooQuickly) {
+    return "Please wait a moment and submit the form again.";
+  }
+
+  return null;
 }
 
 export function HoneypotField() {
