@@ -6,6 +6,7 @@ import { BusinessPage } from "@/pages/BusinessPage";
 import { CheckoutPage } from "@/pages/CheckoutPage";
 import { HomePage } from "@/pages/HomePage";
 import { HowItWorksPage } from "@/pages/HowItWorksPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PricingPage } from "@/pages/PricingPage";
 import { SignupPage } from "@/pages/SignupPage";
 
@@ -21,6 +22,7 @@ export default function App() {
           <Route path={routes.checkout} element={<CheckoutPage />} />
           <Route path={routes.howItWorks} element={<HowItWorksPage />} />
           <Route path={routes.business} element={<BusinessPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </>

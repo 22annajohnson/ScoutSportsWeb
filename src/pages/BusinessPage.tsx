@@ -7,7 +7,7 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { businessCategories, partnerBenefits } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
 import { routes } from "@/lib/routes";
-import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
+import { getSuspiciousSubmissionMessage, HoneypotField } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertPartnerLead } from "@/lib/supabase";
 import { CTASection } from "@/sections/CTASection";
 
@@ -20,7 +20,10 @@ export function BusinessPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (shouldBlockSuspiciousSubmission(event, formMountedAt)) {
+    const suspiciousSubmissionMessage = getSuspiciousSubmissionMessage(event, formMountedAt);
+
+    if (suspiciousSubmissionMessage) {
+      setErrorMessage(suspiciousSubmissionMessage);
       return;
     }
 

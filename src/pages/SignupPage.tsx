@@ -7,7 +7,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
 import { routes } from "@/lib/routes";
-import { HoneypotField, shouldBlockSuspiciousSubmission } from "@/lib/spamProtection";
+import { getSuspiciousSubmissionMessage, HoneypotField } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertSportInterest } from "@/lib/supabase";
 
 const tierNotes = {
@@ -36,7 +36,10 @@ export function SignupPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (shouldBlockSuspiciousSubmission(event, formMountedAt)) {
+    const suspiciousSubmissionMessage = getSuspiciousSubmissionMessage(event, formMountedAt);
+
+    if (suspiciousSubmissionMessage) {
+      setErrorMessage(suspiciousSubmissionMessage);
       return;
     }
 
