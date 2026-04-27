@@ -7,6 +7,11 @@ export const routes = {
   business: "/business",
   signup: "/signup/:tierId",
   checkout: "/checkout/:tierId",
+  portal: "/portal",
+  portalMembership: "/portal/membership",
+  portalProfile: "/portal/profile",
+  portalStats: "/portal/stats",
+  portalHistory: "/portal/history",
 } as const;
 
 export function getSignupPath(tierId: TierSlug) {

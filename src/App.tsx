@@ -9,12 +9,36 @@ import { HowItWorksPage } from "@/pages/HowItWorksPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PricingPage } from "@/pages/PricingPage";
 import { SignupPage } from "@/pages/SignupPage";
+import { PortalAccessGate } from "@/portal/components/PortalAccessGate";
+import { PortalLayout } from "@/portal/components/PortalLayout";
+import { PortalHistoryPage } from "@/portal/pages/PortalHistoryPage";
+import { PortalMembershipPage } from "@/portal/pages/PortalMembershipPage";
+import { PortalOverviewPage } from "@/portal/pages/PortalOverviewPage";
+import { PortalProfilePage } from "@/portal/pages/PortalProfilePage";
+import { PortalStatsPage } from "@/portal/pages/PortalStatsPage";
+import { PortalSessionProvider } from "@/portal/lib/session";
 
 export default function App() {
   return (
     <>
       <ScrollToTop />
       <Routes>
+        <Route
+          path={routes.portal}
+          element={
+            <PortalSessionProvider>
+              <PortalAccessGate />
+            </PortalSessionProvider>
+          }
+        >
+          <Route element={<PortalLayout />}>
+            <Route index element={<PortalOverviewPage />} />
+            <Route path="membership" element={<PortalMembershipPage />} />
+            <Route path="profile" element={<PortalProfilePage />} />
+            <Route path="stats" element={<PortalStatsPage />} />
+            <Route path="history" element={<PortalHistoryPage />} />
+          </Route>
+        </Route>
         <Route element={<SiteLayout />}>
           <Route index element={<HomePage />} />
           <Route path={routes.pricing} element={<PricingPage />} />
