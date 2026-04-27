@@ -25,6 +25,8 @@ export type PortalProfileSnapshot = {
   completionPercent: number;
 };
 
+export type PortalProfileDraft = Omit<PortalProfileSnapshot, "completionPercent">;
+
 export type PortalStatsSnapshot = {
   scoutScore: number;
   cityRank: string;
@@ -60,7 +62,7 @@ export const portalMembership: PortalMembership = {
   manageLabel: "Manage membership",
 };
 
-export const portalProfileSnapshot: PortalProfileSnapshot = {
+export const portalProfileDraftSeed: PortalProfileDraft = {
   fullName: "Alyssa Carter",
   username: "@alyssaplays",
   city: "Brooklyn, NY",
@@ -70,8 +72,32 @@ export const portalProfileSnapshot: PortalProfileSnapshot = {
   bio: "Love fast doubles games, consistent weeknight matches, and crews that keep the energy high.",
   availability: "Weeknights after 6pm, Saturday mornings",
   vibeTags: ["Competitive", "Reliable", "Weeknights", "Social after"],
-  completionPercent: 84,
 };
+
+export function getProfileCompletionPercent(profile: PortalProfileDraft) {
+  const checks = [
+    profile.fullName,
+    profile.username,
+    profile.city,
+    profile.primarySport,
+    profile.skillLevel,
+    profile.bio,
+    profile.availability,
+    profile.secondarySports.length > 0 ? "yes" : "",
+    profile.vibeTags.length > 0 ? "yes" : "",
+  ];
+
+  const completedFields = checks.filter((item) => String(item).trim().length > 0).length;
+
+  return Math.round((completedFields / checks.length) * 100);
+}
+
+export function getPortalProfileSnapshot(profile: PortalProfileDraft): PortalProfileSnapshot {
+  return {
+    ...profile,
+    completionPercent: getProfileCompletionPercent(profile),
+  };
+}
 
 export const portalStatsSnapshot: PortalStatsSnapshot = {
   scoutScore: 92,
