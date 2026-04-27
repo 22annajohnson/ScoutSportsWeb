@@ -2,6 +2,7 @@ import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { SectionHeading } from "@/components/SectionHeading";
 import { howItWorksSteps } from "@/data/site";
+import { routes } from "@/lib/routes";
 import { CTASection } from "@/sections/CTASection";
 
 const extendedSteps = [
@@ -61,9 +62,9 @@ export function HowItWorksPage() {
         title="Find one match today. Build your sports circle over time."
         description="Scout is built for the full local sports habit: discovery, repeat play, friendly competition, social proof, and the places that make every game feel bigger."
         primaryLabel="View Pricing"
-        primaryHref="/pricing"
+        primaryHref={routes.pricing}
         secondaryLabel="Partner With Scout"
-        secondaryHref="/business"
+        secondaryHref={routes.business}
       />
     </>
   );

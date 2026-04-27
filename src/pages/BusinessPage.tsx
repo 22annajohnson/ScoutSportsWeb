@@ -6,6 +6,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { SectionHeading } from "@/components/SectionHeading";
 import { businessCategories, partnerBenefits } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
+import { routes } from "@/lib/routes";
 import { getSuspiciousSubmissionMessage, HoneypotField } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertPartnerLead } from "@/lib/supabase";
 import { CTASection } from "@/sections/CTASection";
@@ -139,8 +140,8 @@ export function BusinessPage() {
                     will reach out with the next steps.
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
-                    <Button href="/">See the consumer site</Button>
-                    <Button href="/pricing" variant="secondary">
+                    <Button href={routes.home}>See the consumer site</Button>
+                    <Button href={routes.pricing} variant="secondary">
                       Explore memberships
                     </Button>
                   </div>
@@ -275,9 +276,9 @@ export function BusinessPage() {
         title="Reach players when they are planning the next game."
         description="Scout puts your business near the moments that drive real local activity: match discovery, court decisions, bracket play, and post-game plans."
         primaryLabel="Join Early Access"
-        primaryHref="/pricing"
+        primaryHref={routes.pricing}
         secondaryLabel="See Home"
-        secondaryHref="/"
+        secondaryHref={routes.home}
       />
     </>
   );

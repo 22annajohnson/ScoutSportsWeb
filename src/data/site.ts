@@ -9,12 +9,13 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { getTierInterestPath, routes, type TierSlug } from "@/lib/routes";
 
 export const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "For Businesses", href: "/business" },
+  { label: "Home", href: routes.home },
+  { label: "Pricing", href: routes.pricing },
+  { label: "How It Works", href: routes.howItWorks },
+  { label: "For Businesses", href: routes.business },
 ];
 
 export const heroStats = [
@@ -80,7 +81,7 @@ export const socialSignals = [
 
 export const pricingTiers = [
   {
-    slug: "free",
+    slug: "free" as TierSlug,
     name: "Free",
     price: "$0",
     cadence: "/month",
@@ -89,7 +90,7 @@ export const pricingTiers = [
     badge: "Open access",
     accent: "from-white/10 to-white/5",
     buttonLabel: "Join Free",
-    signupPath: "/signup/free",
+    signupPath: getTierInterestPath("free"),
     features: [
       "Create your player profile",
       "Swipe and match locally",
@@ -99,7 +100,7 @@ export const pricingTiers = [
     ],
   },
   {
-    slug: "pro",
+    slug: "pro" as TierSlug,
     name: "Pro",
     price: "$9.99",
     cadence: "/month",
@@ -108,7 +109,7 @@ export const pricingTiers = [
     badge: "Most popular",
     accent: "from-accent-purple/30 to-accent-blue/20",
     buttonLabel: "Go Pro",
-    signupPath: "/checkout/pro",
+    signupPath: getTierInterestPath("pro"),
     featured: true,
     features: [
       "Advanced player filters",
@@ -120,7 +121,7 @@ export const pricingTiers = [
     ],
   },
   {
-    slug: "elite",
+    slug: "elite" as TierSlug,
     name: "Elite",
     price: "$17.99",
     cadence: "/month",
@@ -129,7 +130,7 @@ export const pricingTiers = [
     badge: "Members only feel",
     accent: "from-fuchsia-500/30 to-accent-blue/25",
     buttonLabel: "Go Elite",
-    signupPath: "/checkout/elite",
+    signupPath: getTierInterestPath("elite"),
     features: [
       "Everything in Pro",
       "Elite badge on profile",

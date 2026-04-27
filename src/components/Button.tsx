@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { routes } from "@/lib/routes";
 
 type ButtonProps = {
   children: ReactNode;
@@ -21,7 +22,7 @@ const variants = {
 
 export function Button({
   children,
-  href = "/",
+  href = routes.home,
   variant = "primary",
   className = "",
   showArrow = false,

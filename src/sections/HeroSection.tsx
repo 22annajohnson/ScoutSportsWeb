@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { heroStats } from "@/data/site";
+import { routes } from "@/lib/routes";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
@@ -35,10 +36,10 @@ export function HeroSection() {
               </p>
             </div>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Button href="/pricing" className="px-7 py-5 text-base shadow-2xl shadow-violet-500/20">
+              <Button href={routes.pricing} className="px-7 py-5 text-base shadow-2xl shadow-violet-500/20">
                 Join Early Access
               </Button>
-              <Button href="/how-it-works" variant="secondary" className="px-7 py-5 text-base">
+              <Button href={routes.howItWorks} variant="secondary" className="px-7 py-5 text-base">
                 See How It Works
               </Button>
             </div>
