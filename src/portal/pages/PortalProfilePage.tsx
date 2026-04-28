@@ -8,7 +8,7 @@ import { PortalPageHeader } from "../components/PortalPageHeader";
 import { usePortalSession } from "../lib/session";
 
 export function PortalProfilePage() {
-  const { profile, saveProfile, resetProfile } = usePortalSession();
+  const { isProfileRemote, profile, saveProfile } = usePortalSession();
   const [formState, setFormState] = useState<PortalProfileDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -97,7 +97,11 @@ export function PortalProfilePage() {
         bio: currentProfile.bio.trim(),
         availability: currentProfile.availability.trim(),
       });
-      setSaveMessage("Profile saved. This draft is synced across the portal preview.");
+      setSaveMessage(
+        isProfileRemote
+          ? "Profile saved to your account."
+          : "Profile saved. This draft is synced across the portal preview.",
+      );
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong while saving your profile. Please try again.");
@@ -111,7 +115,11 @@ export function PortalProfilePage() {
       <PortalPageHeader
         eyebrow="Profile"
         title="Player identity and profile settings."
-        description="This portal pass turns the profile into a real editable flow. It is still local-preview data for now, but the page is structured for future account-backed reads and writes."
+        description={
+          isProfileRemote
+            ? "This profile is now reading from and saving back to your authenticated portal account."
+            : "This portal pass turns the profile into a real editable flow. In demo mode it still uses local preview data."
+        }
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
             {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
@@ -256,8 +264,9 @@ export function PortalProfilePage() {
 
             <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
               <p className="text-sm leading-7 text-white/65">
-                This profile flow is local-preview only for now. In the next backend pass, these fields should map to
-                the real player profile table and save through authenticated account writes.
+                {isProfileRemote
+                  ? "Authenticated portal sessions now save this profile to Supabase. Membership and stats/history are still preview-backed for now."
+                  : "Demo mode still uses local preview data. Sign in with a real portal account to test account-backed profile reads and writes."}
               </p>
             </div>
 
@@ -285,14 +294,24 @@ export function PortalProfilePage() {
               <button
                 type="button"
                 onClick={() => {
-                  resetProfile();
-                  setSaveMessage("Profile reset to the default preview state.");
+                  setFormState({
+                    fullName: profile.fullName,
+                    username: profile.username,
+                    city: profile.city,
+                    primarySport: profile.primarySport,
+                    secondarySports: profile.secondarySports,
+                    skillLevel: profile.skillLevel,
+                    bio: profile.bio,
+                    availability: profile.availability,
+                    vibeTags: profile.vibeTags,
+                  });
+                  setSaveMessage("");
                   setErrorMessage("");
                 }}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-sm font-semibold text-white transition duration-300 hover:bg-white/10"
               >
                 <RotateCcw className="h-4 w-4" />
-                Reset preview
+                Discard changes
               </button>
               <Button href={routes.portal} variant="ghost" className="px-2 py-4">
                 Back to overview
