@@ -17,6 +17,14 @@ import { PortalOverviewPage } from "@/portal/pages/PortalOverviewPage";
 import { PortalProfilePage } from "@/portal/pages/PortalProfilePage";
 import { PortalStatsPage } from "@/portal/pages/PortalStatsPage";
 import { PortalSessionProvider } from "@/portal/lib/session";
+import { BusinessPortalAccessGate } from "@/businessPortal/components/BusinessPortalAccessGate";
+import { BusinessPortalLayout } from "@/businessPortal/components/BusinessPortalLayout";
+import { BusinessPortalActivityPage } from "@/businessPortal/pages/BusinessPortalActivityPage";
+import { BusinessPortalBillingPage } from "@/businessPortal/pages/BusinessPortalBillingPage";
+import { BusinessPortalOverviewPage } from "@/businessPortal/pages/BusinessPortalOverviewPage";
+import { BusinessPortalProfilePage } from "@/businessPortal/pages/BusinessPortalProfilePage";
+import { BusinessPortalTeamPage } from "@/businessPortal/pages/BusinessPortalTeamPage";
+import { BusinessPortalSessionProvider } from "@/businessPortal/lib/session";
 
 export default function App() {
   return (
@@ -37,6 +45,22 @@ export default function App() {
             <Route path="profile" element={<PortalProfilePage />} />
             <Route path="stats" element={<PortalStatsPage />} />
             <Route path="history" element={<PortalHistoryPage />} />
+          </Route>
+        </Route>
+        <Route
+          path={routes.businessPortal}
+          element={
+            <BusinessPortalSessionProvider>
+              <BusinessPortalAccessGate />
+            </BusinessPortalSessionProvider>
+          }
+        >
+          <Route element={<BusinessPortalLayout />}>
+            <Route index element={<BusinessPortalOverviewPage />} />
+            <Route path="profile" element={<BusinessPortalProfilePage />} />
+            <Route path="team" element={<BusinessPortalTeamPage />} />
+            <Route path="billing" element={<BusinessPortalBillingPage />} />
+            <Route path="activity" element={<BusinessPortalActivityPage />} />
           </Route>
         </Route>
         <Route element={<SiteLayout />}>
