@@ -182,6 +182,36 @@ export type PortalMembershipRecord = {
   updated_at?: string;
 };
 
+export type PortalStatsSummaryRecord = {
+  user_id: string;
+  scout_score: number;
+  city_rank: string;
+  record_summary: string;
+  streak_summary: string;
+  bracket_finish_summary: string;
+  recent_trend_summary: string;
+  recent_matches: number;
+  win_rate_label: string;
+  favorite_format: string;
+  growth_channel: string | null;
+  current_edge: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalSportBreakdownRecord = {
+  id: string;
+  user_id: string;
+  sport: string;
+  rating: number;
+  record_summary: string;
+  trend_summary: string;
+  note: string;
+  sort_order: number | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -671,6 +701,42 @@ export async function fetchPortalMembership(userId: string) {
     )
     .eq("user_id", userId)
     .maybeSingle<PortalMembershipRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalStatsSummary(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_stats_summaries")
+    .select(
+      "user_id, scout_score, city_rank, record_summary, streak_summary, bracket_finish_summary, recent_trend_summary, recent_matches, win_rate_label, favorite_format, growth_channel, current_edge, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalStatsSummaryRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalSportBreakdowns(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_sport_breakdowns")
+    .select("id, user_id, sport, rating, record_summary, trend_summary, note, sort_order, created_at, updated_at")
+    .eq("user_id", userId)
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("sport", { ascending: true })
+    .returns<PortalSportBreakdownRecord[]>();
 
   if (error) {
     throw toAppError(error);
