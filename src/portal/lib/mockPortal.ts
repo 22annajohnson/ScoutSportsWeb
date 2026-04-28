@@ -10,6 +10,11 @@ export type PortalMembership = {
   renewalLabel: string;
   billingSummary: string;
   manageLabel: string;
+  billingSource: string;
+  cadence: string;
+  priceLabel: string;
+  paymentMethod: string;
+  syncedAccessNote: string;
 };
 
 export type PortalProfileSnapshot = {
@@ -25,6 +30,8 @@ export type PortalProfileSnapshot = {
   completionPercent: number;
 };
 
+export type PortalProfileDraft = Omit<PortalProfileSnapshot, "completionPercent">;
+
 export type PortalStatsSnapshot = {
   scoutScore: number;
   cityRank: string;
@@ -32,14 +39,46 @@ export type PortalStatsSnapshot = {
   streak: string;
   bracketFinish: string;
   recentTrend: string;
+  recentMatches: number;
+  winRate: string;
+  favoriteFormat: string;
 };
 
 export type PortalHistoryItem = {
+  id: string;
   title: string;
   dateLabel: string;
+  sport: string;
   result: string;
   detail: string;
   ratingDelta: string;
+  teammateLine: string;
+  durationLabel: string;
+  venueLabel: string;
+  scoreLine: string;
+};
+
+export type PortalInvoiceItem = {
+  id: string;
+  dateLabel: string;
+  amountLabel: string;
+  status: "Paid" | "Pending" | "Refunded";
+  description: string;
+};
+
+export type PortalSportBreakdown = {
+  sport: string;
+  rating: number;
+  record: string;
+  trend: string;
+  note: string;
+};
+
+export type PortalBracketResult = {
+  title: string;
+  finish: string;
+  dateLabel: string;
+  detail: string;
 };
 
 export const portalPlayer = {
@@ -58,9 +97,59 @@ export const portalMembership: PortalMembership = {
   renewalLabel: "Renews May 21, 2026",
   billingSummary: "Monthly plan billed online. In-app upgrades will sync here once billing is unified.",
   manageLabel: "Manage membership",
+  billingSource: "Web billing preview",
+  cadence: "Monthly",
+  priceLabel: "$9.99 / month",
+  paymentMethod: "Visa ending in 4242",
+  syncedAccessNote: "When billing is fully connected, upgrades made in-app or on the web should resolve into this same membership record.",
 };
 
-export const portalProfileSnapshot: PortalProfileSnapshot = {
+export const portalMembershipBenefitsByTier: Record<PortalMembership["tier"], string[]> = {
+  Free: [
+    "Core player profile and local discovery access",
+    "Swipe and match with nearby players",
+    "Public circles and standard ratings visibility",
+    "A lightweight way to stay in the local Scout scene before upgrading",
+  ],
+  Pro: [
+    "Advanced player filters and better fit matching",
+    "Priority bracket access and stronger ranking visibility",
+    "Expanded profile stats and discovery context",
+    "Pro badge and premium access state across the Scout ecosystem",
+  ],
+  Elite: [
+    "Everything in Pro plus elevated discovery placement",
+    "Elite badge and access to premium circles",
+    "Expanded local perks and premium partner drops",
+    "Best bracket and discovery positioning across Scout",
+  ],
+};
+
+export const portalInvoiceHistory: PortalInvoiceItem[] = [
+  {
+    id: "INV-2048",
+    dateLabel: "April 21, 2026",
+    amountLabel: "$9.99",
+    status: "Paid",
+    description: "Scout Pro monthly renewal",
+  },
+  {
+    id: "INV-1984",
+    dateLabel: "March 21, 2026",
+    amountLabel: "$9.99",
+    status: "Paid",
+    description: "Scout Pro monthly renewal",
+  },
+  {
+    id: "INV-1920",
+    dateLabel: "February 21, 2026",
+    amountLabel: "$9.99",
+    status: "Paid",
+    description: "Scout Pro monthly start",
+  },
+];
+
+export const portalProfileDraftSeed: PortalProfileDraft = {
   fullName: "Alyssa Carter",
   username: "@alyssaplays",
   city: "Brooklyn, NY",
@@ -70,8 +159,32 @@ export const portalProfileSnapshot: PortalProfileSnapshot = {
   bio: "Love fast doubles games, consistent weeknight matches, and crews that keep the energy high.",
   availability: "Weeknights after 6pm, Saturday mornings",
   vibeTags: ["Competitive", "Reliable", "Weeknights", "Social after"],
-  completionPercent: 84,
 };
+
+export function getProfileCompletionPercent(profile: PortalProfileDraft) {
+  const checks = [
+    profile.fullName,
+    profile.username,
+    profile.city,
+    profile.primarySport,
+    profile.skillLevel,
+    profile.bio,
+    profile.availability,
+    profile.secondarySports.length > 0 ? "yes" : "",
+    profile.vibeTags.length > 0 ? "yes" : "",
+  ];
+
+  const completedFields = checks.filter((item) => String(item).trim().length > 0).length;
+
+  return Math.round((completedFields / checks.length) * 100);
+}
+
+export function getPortalProfileSnapshot(profile: PortalProfileDraft): PortalProfileSnapshot {
+  return {
+    ...profile,
+    completionPercent: getProfileCompletionPercent(profile),
+  };
+}
 
 export const portalStatsSnapshot: PortalStatsSnapshot = {
   scoutScore: 92,
@@ -80,28 +193,107 @@ export const portalStatsSnapshot: PortalStatsSnapshot = {
   streak: "Won 4 of last 5",
   bracketFinish: "2 semifinal finishes this month",
   recentTrend: "+7 rating over the last 30 days",
+  recentMatches: 8,
+  winRate: "72%",
+  favoriteFormat: "Weeknight doubles",
 };
 
 export const portalHistoryPreview: PortalHistoryItem[] = [
   {
+    id: "match-1",
     title: "Thursday night doubles run",
     dateLabel: "April 24, 2026",
+    sport: "Pickleball",
     result: "Win",
     detail: "McCarren Park • Pickleball • Matched with Mia and Zoe",
     ratingDelta: "+4",
+    teammateLine: "Partnered with Mia • Opponents Zoe and Tash",
+    durationLabel: "58 min",
+    venueLabel: "McCarren Park",
+    scoreLine: "11-8, 11-9",
   },
   {
+    id: "match-2",
     title: "Scout bracket quarterfinal",
     dateLabel: "April 21, 2026",
+    sport: "Pickleball",
     result: "Win",
     detail: "Brooklyn racket club • Bracket play",
     ratingDelta: "+2",
+    teammateLine: "Doubles bracket • Partnered with James",
+    durationLabel: "42 min",
+    venueLabel: "Brooklyn Racket Club",
+    scoreLine: "11-7, 9-11, 11-6",
   },
   {
+    id: "match-3",
     title: "After-work challenge match",
     dateLabel: "April 18, 2026",
+    sport: "Tennis",
     result: "Loss",
     detail: "Prospect Heights • Tennis singles",
     ratingDelta: "-1",
+    teammateLine: "Singles match • Opponent: Lauren",
+    durationLabel: "71 min",
+    venueLabel: "Prospect Heights courts",
+    scoreLine: "4-6, 6-4, 4-6",
+  },
+  {
+    id: "match-4",
+    title: "Saturday social ladder",
+    dateLabel: "April 12, 2026",
+    sport: "Padel",
+    result: "Win",
+    detail: "North Brooklyn club • Rotation ladder set",
+    ratingDelta: "+3",
+    teammateLine: "Partnered with Eli • Opponents Sam and Nick",
+    durationLabel: "49 min",
+    venueLabel: "North Brooklyn Padel Club",
+    scoreLine: "6-3, 6-4",
+  },
+];
+
+export const portalSportBreakdowns: PortalSportBreakdown[] = [
+  {
+    sport: "Pickleball",
+    rating: 92,
+    record: "14-5",
+    trend: "+6 this month",
+    note: "Best recent growth comes from competitive weeknight doubles.",
+  },
+  {
+    sport: "Tennis",
+    rating: 84,
+    record: "4-2",
+    trend: "+1 this month",
+    note: "Singles matches are less frequent but still positive overall.",
+  },
+  {
+    sport: "Padel",
+    rating: 79,
+    record: "3-1",
+    trend: "Newly tracked",
+    note: "Small sample size, but momentum is starting to show.",
+  },
+];
+
+export const portalBracketResults: PortalBracketResult[] = [
+  {
+    title: "Brooklyn spring ladder",
+    finish: "Semifinal",
+    dateLabel: "April 2026",
+    detail: "Won two rounds and gained visibility in local discovery.",
+  },
+  {
+    title: "Prospect park invitational",
+    finish: "Quarterfinal",
+    dateLabel: "March 2026",
+    detail: "Strong turnout and a positive rating move despite a close exit.",
+  },
+  {
+    title: "Weeknight doubles bracket",
+    finish: "Finalist",
+    dateLabel: "February 2026",
+    detail: "Best finish so far this season and strongest teammate fit.",
   },
 ];

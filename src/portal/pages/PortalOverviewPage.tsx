@@ -2,27 +2,32 @@ import { ArrowUpRight, Clock3, Sparkles, Trophy, UserRound } from "lucide-react"
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { routes } from "@/lib/routes";
-import {
-  portalHistoryPreview,
-  portalMembership,
-  portalPlayer,
-  portalProfileSnapshot,
-  portalStatsSnapshot,
-} from "../lib/mockPortal";
+import { portalHistoryPreview, portalStatsSnapshot } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
+import { usePortalSession } from "../lib/session";
 
 export function PortalOverviewPage() {
+  const { membership, player, profile } = usePortalSession();
+
+  if (!membership || !player || !profile) {
+    return null;
+  }
+
+  const renewalValue = membership.renewalLabel.startsWith("Renews ")
+    ? membership.renewalLabel.replace("Renews ", "")
+    : membership.renewalLabel;
+
   return (
     <>
       <PortalPageHeader
         eyebrow="Account home"
-        title={`Welcome back, ${portalPlayer.firstName}.`}
-        description="This first portal shell is designed to feel like the Scout product on the web. It gives players one place to manage membership, prepare profile edits, and review performance context."
+        title={`Welcome back, ${player.firstName}.`}
+        description="This first portal shell is designed to feel like the Scout product on the web. It gives players one place to manage membership, update identity details, and review performance context."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
             <p className="text-xs uppercase tracking-[0.3em] text-white/45">Membership</p>
-            <p className="mt-2 text-2xl font-black text-white">{portalMembership.tier}</p>
-            <p className="mt-1 text-sm text-violet-200">{portalMembership.status}</p>
+            <p className="mt-2 text-2xl font-black text-white">{membership.tier}</p>
+            <p className="mt-1 text-sm text-violet-200">{membership.status}</p>
           </div>
         }
       />
@@ -30,8 +35,8 @@ export function PortalOverviewPage() {
       <div className="grid gap-5 xl:grid-cols-4">
         {[
           { label: "Scout score", value: String(portalStatsSnapshot.scoutScore), detail: portalStatsSnapshot.recentTrend, icon: Trophy },
-          { label: "Profile completion", value: `${portalProfileSnapshot.completionPercent}%`, detail: "Profile editing lands in the next PR.", icon: UserRound },
-          { label: "Renewal", value: "May 21", detail: portalMembership.billingSummary, icon: Clock3 },
+          { label: "Profile completion", value: `${profile.completionPercent}%`, detail: `${profile.primarySport} • ${profile.city}`, icon: UserRound },
+          { label: "Renewal", value: renewalValue, detail: membership.billingSummary, icon: Clock3 },
           { label: "Recent form", value: "4 of 5", detail: portalStatsSnapshot.record, icon: Sparkles },
         ].map((item) => {
           const Icon = item.icon;
@@ -63,7 +68,7 @@ export function PortalOverviewPage() {
             {[
               {
                 title: "Profile editing",
-                text: "Players will be able to update bio, city, sports, availability, vibe tags, and public identity.",
+                text: "Players can now update bio, city, sports, availability, vibe tags, and public identity inside the portal flow.",
               },
               {
                 title: "Membership and billing",
@@ -71,7 +76,7 @@ export function PortalOverviewPage() {
               },
               {
                 title: "Stats and history",
-                text: "Real player metrics, recent matches, and bracket results will replace the preview data here.",
+                text: "The portal now has fuller stats and history surfaces, ready to be swapped from preview data to real account-scoped reads.",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">

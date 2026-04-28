@@ -152,6 +152,36 @@ export type BusinessAuditLogRecord = {
   created_at: string;
 };
 
+export type PortalProfileRecord = {
+  user_id: string;
+  full_name: string;
+  username: string;
+  city: string;
+  primary_sport: string;
+  secondary_sports: string[] | null;
+  skill_level: string;
+  bio: string;
+  availability: string;
+  vibe_tags: string[] | null;
+  updated_at?: string;
+};
+
+export type PortalProfileUpsert = Omit<PortalProfileRecord, "updated_at">;
+
+export type PortalMembershipRecord = {
+  user_id: string;
+  tier: "free" | "pro" | "elite";
+  status: "active" | "trialing" | "pending_renewal" | "past_due" | "canceled";
+  cadence: "monthly" | "annual" | "lifetime" | "app_store" | "play_store" | "manual";
+  price_label: string;
+  renewal_at: string | null;
+  billing_source: string;
+  payment_method_summary: string | null;
+  sync_note: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -599,4 +629,52 @@ export function getPreferredUserLabel(user: User) {
   }
 
   return "Business owner";
+}
+
+export async function fetchPortalProfile(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_profiles")
+    .select(
+      "user_id, full_name, username, city, primary_sport, secondary_sports, skill_level, bio, availability, vibe_tags, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalProfileRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function upsertPortalProfile(payload: PortalProfileUpsert) {
+  const client = requireSupabase();
+
+  const { error } = await client.from("player_portal_profiles").upsert(payload, {
+    onConflict: "user_id",
+  });
+
+  if (error) {
+    throw toAppError(error);
+  }
+}
+
+export async function fetchPortalMembership(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_memberships")
+    .select(
+      "user_id, tier, status, cadence, price_label, renewal_at, billing_source, payment_method_summary, sync_note, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalMembershipRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
 }
