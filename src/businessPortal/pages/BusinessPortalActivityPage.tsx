@@ -33,6 +33,11 @@ export function BusinessPortalActivityPage() {
         </div>
 
         <div className="mt-6 grid gap-4">
+          {activity.length === 0 ? (
+            <div className="rounded-[1.5rem] border border-dashed border-white/15 bg-black/20 p-6 text-sm leading-7 text-white/60">
+              No audit-style activity has been recorded for this workspace yet.
+            </div>
+          ) : null}
           {activity.map((item) => {
             const Icon = activityIcons[item.type];
 

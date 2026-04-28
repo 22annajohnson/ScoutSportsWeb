@@ -8,7 +8,8 @@ import { type BusinessTeamMemberRole } from "../lib/mockBusinessPortal";
 const roleOptions: BusinessTeamMemberRole[] = ["Owner", "Manager", "Analyst", "Billing Admin"];
 
 export function BusinessPortalTeamPage() {
-  const { inviteTeamMember, team, toggleTeamMemberStatus, updateTeamMemberRole } = useBusinessPortalSession();
+  const { inviteTeamMember, isSupabaseMode, team, toggleTeamMemberStatus, updateTeamMemberRole } =
+    useBusinessPortalSession();
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<BusinessTeamMemberRole>("Manager");
@@ -48,7 +49,7 @@ export function BusinessPortalTeamPage() {
     setInviteName("");
     setInviteEmail("");
     setInviteRole("Manager");
-    setMessage("Invitation added to the demo workspace.");
+    setMessage(isSupabaseMode ? "Invitation added to the live workspace." : "Invitation added to the demo workspace.");
   }
 
   return (
@@ -113,8 +114,8 @@ export function BusinessPortalTeamPage() {
 
               <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                 <p className="text-sm leading-7 text-white/65">
-                  In production, invites should create expiring tokens, send email, and log an audit event tied to the
-                  actor, role, and target workspace.
+                  Invites are stored in Supabase and appear in the roster immediately. Email delivery is not wired yet,
+                  so invited teammates will not receive a message until we add a real mailer.
                 </p>
               </div>
 
@@ -138,6 +139,11 @@ export function BusinessPortalTeamPage() {
           </div>
 
           <div className="mt-6 grid gap-4">
+            {team.length === 0 ? (
+              <div className="rounded-[1.5rem] border border-dashed border-white/15 bg-black/20 p-6 text-sm leading-7 text-white/60">
+                No team memberships are loaded yet for this workspace.
+              </div>
+            ) : null}
             {team.map((member) => (
               <div key={member.id} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -162,7 +168,13 @@ export function BusinessPortalTeamPage() {
 
                   <button type="button" onClick={() => void toggleTeamMemberStatus(member.id)} disabled={member.role === "Owner"} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40">
                     <ShieldCheck className="h-4 w-4" />
-                    {member.status === "Paused" ? "Reactivate" : "Pause access"}
+                    {member.source === "invitation"
+                      ? member.status === "Paused"
+                        ? "Restore invite"
+                        : "Revoke invite"
+                      : member.status === "Paused"
+                        ? "Reactivate"
+                        : "Pause access"}
                   </button>
                 </div>
               </div>

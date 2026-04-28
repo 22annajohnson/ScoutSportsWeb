@@ -6,7 +6,7 @@ import { useBusinessPortalSession } from "../lib/session";
 import { type BusinessPortalBillingSettings } from "../lib/mockBusinessPortal";
 
 export function BusinessPortalBillingPage() {
-  const { billing, invoices, saveBillingSettings } = useBusinessPortalSession();
+  const { billing, invoices, isSupabaseMode, saveBillingSettings } = useBusinessPortalSession();
   const [formState, setFormState] = useState<BusinessPortalBillingSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -62,7 +62,9 @@ export function BusinessPortalBillingPage() {
         monthlyBudgetLabel: formState.monthlyBudgetLabel.trim(),
         spendCapLabel: formState.spendCapLabel.trim(),
       });
-      setSaveMessage("Billing settings saved for the demo workspace.");
+      setSaveMessage(
+        isSupabaseMode ? "Billing settings saved for the live workspace." : "Billing settings saved for the demo workspace.",
+      );
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong while saving billing settings.");
@@ -116,9 +118,11 @@ export function BusinessPortalBillingPage() {
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                     <p className="text-sm text-white/45">{label}</p>
-                    <p className="mt-2 text-base leading-7 text-white/75">{value}</p>
-                  </div>
-                ))}
+                  <p className="mt-2 break-words text-base leading-7 text-white/75 [overflow-wrap:anywhere]">
+                    {value}
+                  </p>
+                </div>
+              ))}
               </div>
             </div>
           </GlassCard>
@@ -219,6 +223,11 @@ export function BusinessPortalBillingPage() {
             </div>
 
             <div className="mt-6 grid gap-4">
+              {invoices.length === 0 ? (
+                <div className="rounded-[1.5rem] border border-dashed border-white/15 bg-black/20 p-6 text-sm leading-7 text-white/60">
+                  No invoices have been recorded for this workspace yet.
+                </div>
+              ) : null}
               {invoices.map((invoice) => (
                 <div key={invoice.id} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
