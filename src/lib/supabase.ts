@@ -75,6 +75,22 @@ export type PartnerLeadInsert = {
   honeypot_field?: string;
 };
 
+export type PortalProfileRecord = {
+  user_id: string;
+  full_name: string;
+  username: string;
+  city: string;
+  primary_sport: string;
+  secondary_sports: string[] | null;
+  skill_level: string;
+  bio: string;
+  availability: string;
+  vibe_tags: string[] | null;
+  updated_at?: string;
+};
+
+export type PortalProfileUpsert = Omit<PortalProfileRecord, "updated_at">;
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -109,6 +125,40 @@ export async function insertPartnerLead(payload: PartnerLeadInsert) {
   }
 
   const { error } = await supabase.from("marketing_partner_leads").insert(payload);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function fetchPortalProfile(userId: string) {
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { data, error } = await supabase
+    .from("player_portal_profiles")
+    .select(
+      "user_id, full_name, username, city, primary_sport, secondary_sports, skill_level, bio, availability, vibe_tags, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalProfileRecord>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function upsertPortalProfile(payload: PortalProfileUpsert) {
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { error } = await supabase.from("player_portal_profiles").upsert(payload, {
+    onConflict: "user_id",
+  });
 
   if (error) {
     throw error;

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { routes } from "@/lib/routes";
-import { hasSupabaseConfig, supabase } from "@/lib/supabase";
+import { fetchPortalProfile, hasSupabaseConfig, supabase, upsertPortalProfile } from "@/lib/supabase";
 import { getPortalProfileSnapshot, portalPlayer, portalProfileDraftSeed, type PortalProfileDraft } from "./mockPortal";
 
 const STORAGE_KEY = "scout.portal.demoSession";
@@ -30,6 +30,7 @@ type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
   isSupabaseAuthEnabled: boolean;
+  isProfileRemote: boolean;
   authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
@@ -49,6 +50,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [authSession, setAuthSession] = useState<Session | null>(null);
   const [profileDraft, setProfileDraft] = useState<PortalProfileDraft>(portalProfileDraftSeed);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
+  const isProfileRemote = Boolean(authUser);
 
   const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
@@ -99,6 +101,50 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   }, [isSupabaseAuthEnabled]);
 
   useEffect(() => {
+    if (authUser) {
+      const currentAuthUser = authUser;
+      let isMounted = true;
+
+      async function loadRemoteProfile() {
+        try {
+          const record = await fetchPortalProfile(currentAuthUser.id);
+
+          if (!isMounted) {
+            return;
+          }
+
+          if (!record) {
+            setProfileDraft(portalProfileDraftSeed);
+            return;
+          }
+
+          setProfileDraft({
+            fullName: record.full_name,
+            username: record.username,
+            city: record.city,
+            primarySport: record.primary_sport,
+            secondarySports: record.secondary_sports ?? [],
+            skillLevel: record.skill_level,
+            bio: record.bio,
+            availability: record.availability,
+            vibeTags: record.vibe_tags ?? [],
+          });
+        } catch (error) {
+          console.error("Unable to load remote portal profile", error);
+
+          if (isMounted) {
+            setProfileDraft(portalProfileDraftSeed);
+          }
+        }
+      }
+
+      void loadRemoteProfile();
+
+      return () => {
+        isMounted = false;
+      };
+    }
+
     const storedProfile = window.localStorage.getItem(getProfileStorageKey(identityKey));
 
     if (!storedProfile) {
@@ -113,18 +159,37 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       console.error("Unable to parse stored portal profile draft", error);
       setProfileDraft(portalProfileDraftSeed);
     }
-  }, [identityKey]);
+  }, [authUser, identityKey]);
 
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
       isAuthenticated,
       isSupabaseAuthEnabled,
+      isProfileRemote,
       authUser,
       player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
       saveProfile: async (nextProfile) => {
         setProfileDraft(nextProfile);
+        const currentAuthUser = authUser;
+
+        if (currentAuthUser) {
+          await upsertPortalProfile({
+            user_id: currentAuthUser.id,
+            full_name: nextProfile.fullName,
+            username: nextProfile.username,
+            city: nextProfile.city,
+            primary_sport: nextProfile.primarySport,
+            secondary_sports: nextProfile.secondarySports,
+            skill_level: nextProfile.skillLevel,
+            bio: nextProfile.bio,
+            availability: nextProfile.availability,
+            vibe_tags: nextProfile.vibeTags,
+          });
+          return;
+        }
+
         window.localStorage.setItem(getProfileStorageKey(identityKey), JSON.stringify(nextProfile));
       },
       resetProfile: () => {
@@ -163,7 +228,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(false);
       },
     }),
-    [authSession, authUser, identityKey, isAuthenticated, isReady, isSupabaseAuthEnabled, profileDraft],
+    [authSession, authUser, identityKey, isAuthenticated, isProfileRemote, isReady, isSupabaseAuthEnabled, profileDraft],
   );
 
   return <PortalSessionContext.Provider value={value}>{children}</PortalSessionContext.Provider>;
