@@ -2,16 +2,20 @@ import { ArrowUpRight, Clock3, Sparkles, Trophy, UserRound } from "lucide-react"
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { routes } from "@/lib/routes";
-import { portalHistoryPreview, portalMembership, portalStatsSnapshot } from "../lib/mockPortal";
+import { portalHistoryPreview, portalStatsSnapshot } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
 import { usePortalSession } from "../lib/session";
 
 export function PortalOverviewPage() {
-  const { player, profile } = usePortalSession();
+  const { membership, player, profile } = usePortalSession();
 
-  if (!player || !profile) {
+  if (!membership || !player || !profile) {
     return null;
   }
+
+  const renewalValue = membership.renewalLabel.startsWith("Renews ")
+    ? membership.renewalLabel.replace("Renews ", "")
+    : membership.renewalLabel;
 
   return (
     <>
@@ -22,8 +26,8 @@ export function PortalOverviewPage() {
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
             <p className="text-xs uppercase tracking-[0.3em] text-white/45">Membership</p>
-            <p className="mt-2 text-2xl font-black text-white">{portalMembership.tier}</p>
-            <p className="mt-1 text-sm text-violet-200">{portalMembership.status}</p>
+            <p className="mt-2 text-2xl font-black text-white">{membership.tier}</p>
+            <p className="mt-1 text-sm text-violet-200">{membership.status}</p>
           </div>
         }
       />
@@ -32,7 +36,7 @@ export function PortalOverviewPage() {
         {[
           { label: "Scout score", value: String(portalStatsSnapshot.scoutScore), detail: portalStatsSnapshot.recentTrend, icon: Trophy },
           { label: "Profile completion", value: `${profile.completionPercent}%`, detail: `${profile.primarySport} • ${profile.city}`, icon: UserRound },
-          { label: "Renewal", value: "May 21", detail: portalMembership.billingSummary, icon: Clock3 },
+          { label: "Renewal", value: renewalValue, detail: membership.billingSummary, icon: Clock3 },
           { label: "Recent form", value: "4 of 5", detail: portalStatsSnapshot.record, icon: Sparkles },
         ].map((item) => {
           const Icon = item.icon;

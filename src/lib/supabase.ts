@@ -91,6 +91,20 @@ export type PortalProfileRecord = {
 
 export type PortalProfileUpsert = Omit<PortalProfileRecord, "updated_at">;
 
+export type PortalMembershipRecord = {
+  user_id: string;
+  tier: "free" | "pro" | "elite";
+  status: "active" | "trialing" | "pending_renewal" | "past_due" | "canceled";
+  cadence: "monthly" | "annual" | "lifetime" | "app_store" | "play_store" | "manual";
+  price_label: string;
+  renewal_at: string | null;
+  billing_source: string;
+  payment_method_summary: string | null;
+  sync_note: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -163,4 +177,24 @@ export async function upsertPortalProfile(payload: PortalProfileUpsert) {
   if (error) {
     throw error;
   }
+}
+
+export async function fetchPortalMembership(userId: string) {
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { data, error } = await supabase
+    .from("player_portal_memberships")
+    .select(
+      "user_id, tier, status, cadence, price_label, renewal_at, billing_source, payment_method_summary, sync_note, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalMembershipRecord>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
