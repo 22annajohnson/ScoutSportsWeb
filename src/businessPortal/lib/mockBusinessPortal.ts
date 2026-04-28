@@ -31,6 +31,7 @@ export type BusinessPortalWorkspaceMember = {
   role: BusinessTeamMemberRole;
   status: BusinessTeamMemberStatus;
   lastActive: string;
+  source?: "membership" | "invitation";
 };
 
 export type BusinessPortalBillingSettings = {
