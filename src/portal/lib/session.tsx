@@ -1,8 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { routes } from "@/lib/routes";
-import { fetchPortalProfile, hasSupabaseConfig, supabase, upsertPortalProfile } from "@/lib/supabase";
-import { getPortalProfileSnapshot, portalPlayer, portalProfileDraftSeed, type PortalProfileDraft } from "./mockPortal";
+import { fetchPortalMembership, fetchPortalProfile, hasSupabaseConfig, supabase, upsertPortalProfile } from "@/lib/supabase";
+import {
+  getPortalProfileSnapshot,
+  portalMembership,
+  portalPlayer,
+  portalProfileDraftSeed,
+  type PortalMembership,
+  type PortalProfileDraft,
+} from "./mockPortal";
 
 const STORAGE_KEY = "scout.portal.demoSession";
 const PROFILE_STORAGE_KEY_PREFIX = "scout.portal.profileDraft";
@@ -26,14 +33,101 @@ function getPlayerFromProfile(profile: PortalProfileDraft, user: User | null) {
   };
 }
 
+function formatMembershipTier(tier: "free" | "pro" | "elite"): PortalMembership["tier"] {
+  switch (tier) {
+    case "elite":
+      return "Elite";
+    case "pro":
+      return "Pro";
+    default:
+      return "Free";
+  }
+}
+
+function formatMembershipStatus(
+  status: "active" | "trialing" | "pending_renewal" | "past_due" | "canceled",
+): PortalMembership["status"] {
+  switch (status) {
+    case "trialing":
+      return "Trialing";
+    case "pending_renewal":
+    case "past_due":
+    case "canceled":
+      return "Pending renewal";
+    default:
+      return "Active";
+  }
+}
+
+function formatMembershipCadence(cadence: "monthly" | "annual" | "lifetime" | "app_store" | "play_store" | "manual") {
+  switch (cadence) {
+    case "annual":
+      return "Annual";
+    case "lifetime":
+      return "Lifetime";
+    case "app_store":
+      return "Managed in the App Store";
+    case "play_store":
+      return "Managed in Google Play";
+    case "manual":
+      return "Managed manually";
+    default:
+      return "Monthly";
+  }
+}
+
+function formatRenewalLabel(renewalAt: string | null) {
+  if (!renewalAt) {
+    return "No renewal date on file yet";
+  }
+
+  const date = new Date(renewalAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Renewal date unavailable";
+  }
+
+  return `Renews ${new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date)}`;
+}
+
+function mapMembershipRecord(record: Awaited<ReturnType<typeof fetchPortalMembership>>): PortalMembership | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    tier: formatMembershipTier(record.tier),
+    status: formatMembershipStatus(record.status),
+    renewalLabel: formatRenewalLabel(record.renewal_at),
+    billingSummary:
+      record.sync_note ??
+      "Your membership is now resolving from the account-level portal record instead of preview-only data.",
+    manageLabel: "Manage membership",
+    billingSource: record.billing_source,
+    cadence: formatMembershipCadence(record.cadence),
+    priceLabel: record.price_label,
+    paymentMethod: record.payment_method_summary ?? "Payment method not synced yet",
+    syncedAccessNote:
+      record.sync_note ??
+      "This membership state is ready to unify upgrades made online or in-app once billing sync is fully connected.",
+  };
+}
+
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
   isSupabaseAuthEnabled: boolean;
   isProfileRemote: boolean;
+  isMembershipRemote: boolean;
+  isMembershipLoading: boolean;
   authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
+  membership: PortalMembership | null;
   saveProfile: (nextProfile: PortalProfileDraft) => Promise<void>;
   resetProfile: () => void;
   signInWithEmail: (email: string) => Promise<void>;
@@ -49,8 +143,11 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authSession, setAuthSession] = useState<Session | null>(null);
   const [profileDraft, setProfileDraft] = useState<PortalProfileDraft>(portalProfileDraftSeed);
+  const [membership, setMembership] = useState<PortalMembership>(portalMembership);
+  const [isMembershipLoading, setIsMembershipLoading] = useState(false);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
   const isProfileRemote = Boolean(authUser);
+  const isMembershipRemote = Boolean(authUser);
 
   const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
@@ -161,15 +258,58 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     }
   }, [authUser, identityKey]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setMembership(portalMembership);
+      setIsMembershipLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsMembershipLoading(true);
+
+    async function loadMembership() {
+      try {
+        const record = await fetchPortalMembership(currentAuthUser.id);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setMembership(mapMembershipRecord(record) ?? portalMembership);
+      } catch (error) {
+        console.error("Unable to load remote portal membership", error);
+
+        if (isMounted) {
+          setMembership(portalMembership);
+        }
+      } finally {
+        if (isMounted) {
+          setIsMembershipLoading(false);
+        }
+      }
+    }
+
+    void loadMembership();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
       isAuthenticated,
       isSupabaseAuthEnabled,
       isProfileRemote,
+      isMembershipRemote,
+      isMembershipLoading,
       authUser,
       player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
+      membership: isAuthenticated ? membership : null,
       saveProfile: async (nextProfile) => {
         setProfileDraft(nextProfile);
         const currentAuthUser = authUser;
@@ -228,7 +368,19 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(false);
       },
     }),
-    [authSession, authUser, identityKey, isAuthenticated, isProfileRemote, isReady, isSupabaseAuthEnabled, profileDraft],
+    [
+      authSession,
+      authUser,
+      identityKey,
+      isAuthenticated,
+      isMembershipLoading,
+      isMembershipRemote,
+      isProfileRemote,
+      isReady,
+      isSupabaseAuthEnabled,
+      membership,
+      profileDraft,
+    ],
   );
 
   return <PortalSessionContext.Provider value={value}>{children}</PortalSessionContext.Provider>;

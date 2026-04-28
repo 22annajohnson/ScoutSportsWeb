@@ -104,12 +104,26 @@ export const portalMembership: PortalMembership = {
   syncedAccessNote: "When billing is fully connected, upgrades made in-app or on the web should resolve into this same membership record.",
 };
 
-export const portalMembershipBenefits = [
-  "Advanced player filters and better fit matching",
-  "Priority bracket access and stronger ranking visibility",
-  "Expanded profile stats and discovery context",
-  "Pro badge and premium access state across the Scout ecosystem",
-];
+export const portalMembershipBenefitsByTier: Record<PortalMembership["tier"], string[]> = {
+  Free: [
+    "Core player profile and local discovery access",
+    "Swipe and match with nearby players",
+    "Public circles and standard ratings visibility",
+    "A lightweight way to stay in the local Scout scene before upgrading",
+  ],
+  Pro: [
+    "Advanced player filters and better fit matching",
+    "Priority bracket access and stronger ranking visibility",
+    "Expanded profile stats and discovery context",
+    "Pro badge and premium access state across the Scout ecosystem",
+  ],
+  Elite: [
+    "Everything in Pro plus elevated discovery placement",
+    "Elite badge and access to premium circles",
+    "Expanded local perks and premium partner drops",
+    "Best bracket and discovery positioning across Scout",
+  ],
+};
 
 export const portalInvoiceHistory: PortalInvoiceItem[] = [
   {
