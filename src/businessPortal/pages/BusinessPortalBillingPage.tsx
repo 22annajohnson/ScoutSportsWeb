@@ -6,7 +6,7 @@ import { useBusinessPortalSession } from "../lib/session";
 import { type BusinessPortalBillingSettings } from "../lib/mockBusinessPortal";
 
 export function BusinessPortalBillingPage() {
-  const { billing, invoices, isSupabaseMode, saveBillingSettings } = useBusinessPortalSession();
+  const { billing, currentRole, invoices, isSupabaseMode, permissions, saveBillingSettings } = useBusinessPortalSession();
   const [formState, setFormState] = useState<BusinessPortalBillingSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -41,6 +41,11 @@ export function BusinessPortalBillingPage() {
     event.preventDefault();
     setSaveMessage("");
     setErrorMessage("");
+
+    if (!permissions.canManageBilling) {
+      setErrorMessage("Your current role can view billing, but cannot edit billing settings.");
+      return;
+    }
 
     if (!formState) {
       return;
@@ -81,7 +86,7 @@ export function BusinessPortalBillingPage() {
         description="Phase 1 gives business owners one place to review plan state, payment details, budget guardrails, and recent invoices before a real billing provider is wired in."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
-            {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
+            {permissions.canManageBilling ? (hasUnsavedChanges ? "Unsaved changes" : "All changes saved") : "Read only"}
           </div>
         }
       />
@@ -118,11 +123,11 @@ export function BusinessPortalBillingPage() {
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                     <p className="text-sm text-white/45">{label}</p>
-                  <p className="mt-2 break-words text-base leading-7 text-white/75 [overflow-wrap:anywhere]">
-                    {value}
-                  </p>
-                </div>
-              ))}
+                    <p className="mt-2 break-words text-base leading-7 text-white/75 [overflow-wrap:anywhere]">
+                      {value}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </GlassCard>
@@ -136,32 +141,38 @@ export function BusinessPortalBillingPage() {
               <WalletCards className="mt-1 h-5 w-5 text-emerald-200" />
             </div>
 
+            {!permissions.canManageBilling ? (
+              <div className="mt-6 rounded-[1.5rem] border border-amber-300/15 bg-amber-500/10 p-5 text-sm leading-7 text-amber-100">
+                You are signed in as {currentRole ?? "a viewer"}. Billing settings are read-only for your role.
+              </div>
+            ) : null}
+
             <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
                   <span className="text-sm text-white/70">Billing contact email</span>
-                  <input value={formState.billingContactEmail} onChange={(event) => updateField("billingContactEmail", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="finance@harborfit.co" />
+                  <input disabled={!permissions.canManageBilling} value={formState.billingContactEmail} onChange={(event) => updateField("billingContactEmail", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="finance@harborfit.co" />
                 </label>
                 <label className="space-y-2">
                   <span className="text-sm text-white/70">Payment method label</span>
-                  <input value={formState.paymentMethod} onChange={(event) => updateField("paymentMethod", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="Visa ending in 4242" />
+                  <input disabled={!permissions.canManageBilling} value={formState.paymentMethod} onChange={(event) => updateField("paymentMethod", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Visa ending in 4242" />
                 </label>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
                   <span className="text-sm text-white/70">Monthly budget label</span>
-                  <input value={formState.monthlyBudgetLabel} onChange={(event) => updateField("monthlyBudgetLabel", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="$1,800 monthly ad budget" />
+                  <input disabled={!permissions.canManageBilling} value={formState.monthlyBudgetLabel} onChange={(event) => updateField("monthlyBudgetLabel", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="$1,800 monthly ad budget" />
                 </label>
                 <label className="space-y-2">
                   <span className="text-sm text-white/70">Spend cap label</span>
-                  <input value={formState.spendCapLabel} onChange={(event) => updateField("spendCapLabel", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="$2,500 account spend cap" />
+                  <input disabled={!permissions.canManageBilling} value={formState.spendCapLabel} onChange={(event) => updateField("spendCapLabel", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="$2,500 account spend cap" />
                 </label>
               </div>
 
               <label className="space-y-2">
                 <span className="text-sm text-white/70">Billing address</span>
-                <input value={formState.billingAddress} onChange={(event) => updateField("billingAddress", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="204 Kent Ave, Brooklyn, NY 11249" />
+                <input disabled={!permissions.canManageBilling} value={formState.billingAddress} onChange={(event) => updateField("billingAddress", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="204 Kent Ave, Brooklyn, NY 11249" />
               </label>
 
               <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
@@ -175,8 +186,8 @@ export function BusinessPortalBillingPage() {
               {errorMessage ? <p className="text-sm text-rose-300">{errorMessage}</p> : null}
               {saveMessage ? <p className="text-sm text-emerald-200">{saveMessage}</p> : null}
 
-              <button type="submit" disabled={isSaving} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70">
-                {isSaving ? "Saving..." : "Save billing settings"}
+              <button type="submit" disabled={!permissions.canManageBilling || isSaving} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
+                {permissions.canManageBilling ? (isSaving ? "Saving..." : "Save billing settings") : "Billing access is read only"}
               </button>
             </form>
           </GlassCard>

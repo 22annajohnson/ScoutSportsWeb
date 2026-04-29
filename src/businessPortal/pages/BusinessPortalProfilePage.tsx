@@ -6,7 +6,7 @@ import { useBusinessPortalSession } from "../lib/session";
 import { type BusinessPortalProfileDraft } from "../lib/mockBusinessPortal";
 
 export function BusinessPortalProfilePage() {
-  const { business, resetBusinessProfile, saveBusinessProfile } = useBusinessPortalSession();
+  const { business, currentRole, permissions, resetBusinessProfile, saveBusinessProfile } = useBusinessPortalSession();
   const [formState, setFormState] = useState<BusinessPortalProfileDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -68,6 +68,11 @@ export function BusinessPortalProfilePage() {
     setSaveMessage("");
     setErrorMessage("");
 
+    if (!permissions.canManageProfile) {
+      setErrorMessage("Your current role can view the business profile, but cannot edit it.");
+      return;
+    }
+
     if (!formState) {
       return;
     }
@@ -127,7 +132,7 @@ export function BusinessPortalProfilePage() {
         description="This is the Phase 1 source of truth for how the business appears in the portal and what information is available for verification, billing, and future publishing workflows."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
-            {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
+            {permissions.canManageProfile ? (hasUnsavedChanges ? "Unsaved changes" : "All changes saved") : "Read only"}
           </div>
         }
       />
@@ -176,52 +181,57 @@ export function BusinessPortalProfilePage() {
           </div>
 
           <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+            {!permissions.canManageProfile ? (
+              <div className="rounded-[1.5rem] border border-amber-300/15 bg-amber-500/10 p-5 text-sm leading-7 text-amber-100">
+                You are signed in as {currentRole ?? "a viewer"}. Business settings are read-only for your role.
+              </div>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2">
                 <span className="text-sm text-white/70">Display name</span>
-                <input value={formState.displayName} onChange={(event) => updateField("displayName", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="Harbor Fit Social Club" />
+                <input disabled={!permissions.canManageProfile} value={formState.displayName} onChange={(event) => updateField("displayName", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Harbor Fit Social Club" />
               </label>
               <label className="space-y-2">
                 <span className="text-sm text-white/70">Legal name</span>
-                <input value={formState.legalName} onChange={(event) => updateField("legalName", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="Harbor Fit Group LLC" />
+                <input disabled={!permissions.canManageProfile} value={formState.legalName} onChange={(event) => updateField("legalName", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Harbor Fit Group LLC" />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2">
                 <span className="text-sm text-white/70">Workspace slug</span>
-                <input value={formState.slug} onChange={(event) => updateField("slug", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="harbor-fit-social-club" />
+                <input disabled={!permissions.canManageProfile} value={formState.slug} onChange={(event) => updateField("slug", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="harbor-fit-social-club" />
               </label>
               <label className="space-y-2">
                 <span className="text-sm text-white/70">Category</span>
-                <input value={formState.category} onChange={(event) => updateField("category", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="Fitness studio and community club" />
+                <input disabled={!permissions.canManageProfile} value={formState.category} onChange={(event) => updateField("category", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Fitness studio and community club" />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2">
                 <span className="text-sm text-white/70">Support email</span>
-                <input value={formState.supportEmail} onChange={(event) => updateField("supportEmail", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="team@harborfit.co" />
+                <input disabled={!permissions.canManageProfile} value={formState.supportEmail} onChange={(event) => updateField("supportEmail", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="team@harborfit.co" />
               </label>
               <label className="space-y-2">
                 <span className="text-sm text-white/70">Phone</span>
-                <input value={formState.phone} onChange={(event) => updateField("phone", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="(718) 555-0144" />
+                <input disabled={!permissions.canManageProfile} value={formState.phone} onChange={(event) => updateField("phone", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="(718) 555-0144" />
               </label>
             </div>
 
             <label className="space-y-2">
               <span className="text-sm text-white/70">Website</span>
-              <input value={formState.website} onChange={(event) => updateField("website", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="https://harborfit.co" />
+              <input disabled={!permissions.canManageProfile} value={formState.website} onChange={(event) => updateField("website", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="https://harborfit.co" />
             </label>
 
             <label className="space-y-2">
               <span className="text-sm text-white/70">Locations</span>
-              <input value={formState.locations.join(", ")} onChange={(event) => updateField("locations", parseCommaSeparated(event.target.value))} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="Williamsburg, Brooklyn, Greenpoint, Brooklyn" />
+              <input disabled={!permissions.canManageProfile} value={formState.locations.join(", ")} onChange={(event) => updateField("locations", parseCommaSeparated(event.target.value))} className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Williamsburg, Brooklyn, Greenpoint, Brooklyn" />
             </label>
 
             <label className="space-y-2">
               <span className="text-sm text-white/70">Business description</span>
-              <textarea value={formState.description} onChange={(event) => updateField("description", event.target.value)} className="min-h-40 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50" placeholder="Describe your business and what customers should know." />
+              <textarea disabled={!permissions.canManageProfile} value={formState.description} onChange={(event) => updateField("description", event.target.value)} className="min-h-40 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Describe your business and what customers should know." />
             </label>
 
             <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
@@ -235,10 +245,10 @@ export function BusinessPortalProfilePage() {
             {saveMessage ? <p className="text-sm text-emerald-200">{saveMessage}</p> : null}
 
             <div className="flex flex-wrap gap-3">
-              <button type="submit" disabled={isSaving} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70">
-                {isSaving ? "Saving..." : "Save business profile"}
+              <button type="submit" disabled={!permissions.canManageProfile || isSaving} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
+                {permissions.canManageProfile ? (isSaving ? "Saving..." : "Save business profile") : "Business settings are read only"}
               </button>
-              <button type="button" onClick={handleReset} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-sm font-semibold text-white transition hover:bg-white/10">
+              <button type="button" disabled={!permissions.canManageProfile} onClick={handleReset} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50">
                 <RotateCcw className="h-4 w-4" />
                 Reset demo data
               </button>
