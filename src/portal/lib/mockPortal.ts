@@ -42,6 +42,8 @@ export type PortalStatsSnapshot = {
   recentMatches: number;
   winRate: string;
   favoriteFormat: string;
+  growthChannel: string;
+  currentEdge: string;
 };
 
 export type PortalHistoryItem = {
@@ -196,6 +198,8 @@ export const portalStatsSnapshot: PortalStatsSnapshot = {
   recentMatches: 8,
   winRate: "72%",
   favoriteFormat: "Weeknight doubles",
+  growthChannel: "Bracket and repeat-circle play",
+  currentEdge: "Reliable doubles chemistry and pace control",
 };
 
 export const portalHistoryPreview: PortalHistoryItem[] = [

@@ -1,14 +1,26 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { routes } from "@/lib/routes";
-import { fetchPortalMembership, fetchPortalProfile, hasSupabaseConfig, supabase, upsertPortalProfile } from "@/lib/supabase";
+import {
+  fetchPortalMembership,
+  fetchPortalProfile,
+  fetchPortalSportBreakdowns,
+  fetchPortalStatsSummary,
+  hasSupabaseConfig,
+  supabase,
+  upsertPortalProfile,
+} from "@/lib/supabase";
 import {
   getPortalProfileSnapshot,
   portalMembership,
   portalPlayer,
   portalProfileDraftSeed,
+  portalSportBreakdowns,
+  portalStatsSnapshot,
   type PortalMembership,
   type PortalProfileDraft,
+  type PortalSportBreakdown,
+  type PortalStatsSnapshot,
 } from "./mockPortal";
 
 const STORAGE_KEY = "scout.portal.demoSession";
@@ -117,17 +129,51 @@ function mapMembershipRecord(record: Awaited<ReturnType<typeof fetchPortalMember
   };
 }
 
+function mapStatsSummaryRecord(record: Awaited<ReturnType<typeof fetchPortalStatsSummary>>): PortalStatsSnapshot | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    scoutScore: record.scout_score,
+    cityRank: record.city_rank,
+    record: record.record_summary,
+    streak: record.streak_summary,
+    bracketFinish: record.bracket_finish_summary,
+    recentTrend: record.recent_trend_summary,
+    recentMatches: record.recent_matches,
+    winRate: record.win_rate_label,
+    favoriteFormat: record.favorite_format,
+    growthChannel: record.growth_channel ?? portalStatsSnapshot.growthChannel,
+    currentEdge: record.current_edge ?? portalStatsSnapshot.currentEdge,
+  };
+}
+
+function mapSportBreakdownRecords(records: Awaited<ReturnType<typeof fetchPortalSportBreakdowns>>): PortalSportBreakdown[] {
+  return records.map((record) => ({
+    sport: record.sport,
+    rating: record.rating,
+    record: record.record_summary,
+    trend: record.trend_summary,
+    note: record.note,
+  }));
+}
+
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
   isSupabaseAuthEnabled: boolean;
   isProfileRemote: boolean;
   isMembershipRemote: boolean;
+  isStatsRemote: boolean;
   isMembershipLoading: boolean;
+  isStatsLoading: boolean;
   authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
   membership: PortalMembership | null;
+  stats: PortalStatsSnapshot | null;
+  sportBreakdowns: PortalSportBreakdown[];
   saveProfile: (nextProfile: PortalProfileDraft) => Promise<void>;
   resetProfile: () => void;
   signInWithEmail: (email: string) => Promise<void>;
@@ -145,9 +191,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [profileDraft, setProfileDraft] = useState<PortalProfileDraft>(portalProfileDraftSeed);
   const [membership, setMembership] = useState<PortalMembership>(portalMembership);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
+  const [stats, setStats] = useState<PortalStatsSnapshot>(portalStatsSnapshot);
+  const [sportBreakdowns, setSportBreakdowns] = useState<PortalSportBreakdown[]>(portalSportBreakdowns);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
   const isProfileRemote = Boolean(authUser);
   const isMembershipRemote = Boolean(authUser);
+  const isStatsRemote = Boolean(authUser);
 
   const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
@@ -298,6 +348,52 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     };
   }, [authUser]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setStats(portalStatsSnapshot);
+      setSportBreakdowns(portalSportBreakdowns);
+      setIsStatsLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsStatsLoading(true);
+
+    async function loadStats() {
+      try {
+        const [summaryRecord, breakdownRecords] = await Promise.all([
+          fetchPortalStatsSummary(currentAuthUser.id),
+          fetchPortalSportBreakdowns(currentAuthUser.id),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setStats(mapStatsSummaryRecord(summaryRecord) ?? portalStatsSnapshot);
+        setSportBreakdowns(breakdownRecords.length > 0 ? mapSportBreakdownRecords(breakdownRecords) : portalSportBreakdowns);
+      } catch (error) {
+        console.error("Unable to load remote portal stats", error);
+
+        if (isMounted) {
+          setStats(portalStatsSnapshot);
+          setSportBreakdowns(portalSportBreakdowns);
+        }
+      } finally {
+        if (isMounted) {
+          setIsStatsLoading(false);
+        }
+      }
+    }
+
+    void loadStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
@@ -305,11 +401,15 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isSupabaseAuthEnabled,
       isProfileRemote,
       isMembershipRemote,
+      isStatsRemote,
       isMembershipLoading,
+      isStatsLoading,
       authUser,
       player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
       membership: isAuthenticated ? membership : null,
+      stats: isAuthenticated ? stats : null,
+      sportBreakdowns: isAuthenticated ? sportBreakdowns : [],
       saveProfile: async (nextProfile) => {
         setProfileDraft(nextProfile);
         const currentAuthUser = authUser;
@@ -376,9 +476,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isMembershipLoading,
       isMembershipRemote,
       isProfileRemote,
+      isStatsLoading,
+      isStatsRemote,
       isReady,
       isSupabaseAuthEnabled,
       membership,
+      sportBreakdowns,
+      stats,
       profileDraft,
     ],
   );

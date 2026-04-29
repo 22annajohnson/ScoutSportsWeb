@@ -1,23 +1,34 @@
 import { Activity, Award, BarChart3, Flame, Swords, TrendingUp } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
-import { portalBracketResults, portalSportBreakdowns, portalStatsSnapshot } from "../lib/mockPortal";
+import { portalBracketResults } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
+import { usePortalSession } from "../lib/session";
 
 export function PortalStatsPage() {
+  const { isStatsLoading, isStatsRemote, sportBreakdowns, stats } = usePortalSession();
+
+  if (!stats) {
+    return null;
+  }
+
   return (
     <>
       <PortalPageHeader
         eyebrow="Stats"
         title="Performance and ranking snapshot."
-        description="This page is now structured like a real player performance dashboard: headline metrics, sport-level breakdowns, bracket finishes, and momentum framing. The next step is replacing preview data with app-backed reads."
+        description={
+          isStatsRemote
+            ? "Your headline performance metrics now read from the portal account layer, while deeper bracket and match-history surfaces can continue moving over in follow-up passes."
+            : "This page is now structured like a real player performance dashboard: headline metrics, sport-level breakdowns, bracket finishes, and momentum framing. The next step is replacing preview data with app-backed reads."
+        }
       />
 
       <div className="grid gap-5 xl:grid-cols-4">
         {[
-          { icon: Award, label: "Scout score", value: String(portalStatsSnapshot.scoutScore), detail: portalStatsSnapshot.cityRank },
-          { icon: Activity, label: "Record", value: portalStatsSnapshot.record, detail: `${portalStatsSnapshot.recentMatches} recent matches tracked` },
-          { icon: Flame, label: "Current form", value: portalStatsSnapshot.streak, detail: portalStatsSnapshot.winRate },
-          { icon: TrendingUp, label: "Momentum", value: portalStatsSnapshot.recentTrend, detail: portalStatsSnapshot.bracketFinish },
+          { icon: Award, label: "Scout score", value: String(stats.scoutScore), detail: stats.cityRank },
+          { icon: Activity, label: "Record", value: stats.record, detail: `${stats.recentMatches} recent matches tracked` },
+          { icon: Flame, label: "Current form", value: stats.streak, detail: stats.winRate },
+          { icon: TrendingUp, label: "Momentum", value: stats.recentTrend, detail: stats.bracketFinish },
         ].map((item) => {
           const Icon = item.icon;
 
@@ -45,7 +56,7 @@ export function PortalStatsPage() {
           </div>
 
           <div className="mt-6 grid gap-4">
-            {portalSportBreakdowns.map((item) => (
+            {sportBreakdowns.map((item) => (
               <div key={item.sport} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
@@ -61,6 +72,8 @@ export function PortalStatsPage() {
               </div>
             ))}
           </div>
+
+          {isStatsLoading ? <p className="mt-4 text-sm text-blue-200">Refreshing performance snapshot...</p> : null}
         </GlassCard>
 
         <div className="grid gap-5">
@@ -73,11 +86,11 @@ export function PortalStatsPage() {
               <Swords className="mt-1 h-5 w-5 text-violet-200" />
             </div>
 
-            <div className="mt-6 grid gap-4">
+              <div className="mt-6 grid gap-4">
               {[
-                ["Favorite format", portalStatsSnapshot.favoriteFormat],
-                ["Best growth channel", "Bracket and repeat-circle play"],
-                ["Current edge", "Reliable doubles chemistry and pace control"],
+                ["Favorite format", stats.favoriteFormat],
+                ["Best growth channel", stats.growthChannel],
+                ["Current edge", stats.currentEdge],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                   <p className="text-sm text-white/45">{label}</p>
