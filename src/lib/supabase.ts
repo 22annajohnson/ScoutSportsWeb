@@ -2,6 +2,8 @@ import { createClient, type Session, type SupabaseClient, type User } from "@sup
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const siteUrl = import.meta.env.VITE_SITE_URL;
+const inviteSiteUrl = import.meta.env.VITE_INVITE_SITE_URL;
 const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 if (!isSupabaseConfigured) {
@@ -152,6 +154,13 @@ export type BusinessAuditLogRecord = {
   created_at: string;
 };
 
+export type BusinessInviteEmailResult = {
+  success: boolean;
+  provider: string;
+  id?: string | null;
+  error?: string | null;
+};
+
 export type PortalProfileRecord = {
   user_id: string;
   full_name: string;
@@ -184,6 +193,14 @@ export type PortalMembershipRecord = {
 
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
+}
+
+export function getAppOrigin() {
+  if (import.meta.env.DEV) {
+    return window.location.origin;
+  }
+
+  return inviteSiteUrl || siteUrl || window.location.origin;
 }
 
 function requireSupabase() {
@@ -239,12 +256,12 @@ export function onSupabaseAuthStateChange(callback: (session: Session | null) =>
   return client.auth.onAuthStateChange((_event, session) => callback(session));
 }
 
-export async function signInWithMagicLink(email: string) {
+export async function signInWithMagicLink(email: string, redirectPath = "/business-portal") {
   const client = requireSupabase();
   const { error } = await client.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${window.location.origin}/business-portal`,
+      emailRedirectTo: `${getAppOrigin()}${redirectPath}`,
     },
   });
 
@@ -502,17 +519,25 @@ export async function createBusinessInvitation(input: {
   invitedBy: string | null;
 }) {
   const client = requireSupabase();
-  const { error } = await client.from("business_invitations").insert({
-    business_id: input.businessId,
-    invited_name: input.invitedName || null,
-    email: input.email,
-    role: input.role,
-    invited_by: input.invitedBy,
-  });
+  const { data, error } = await client
+    .from("business_invitations")
+    .insert({
+      business_id: input.businessId,
+      invited_name: input.invitedName || null,
+      email: input.email,
+      role: input.role,
+      invited_by: input.invitedBy,
+    })
+    .select(
+      "id, business_id, invited_name, email, role, invited_by, invite_token, status, expires_at, created_at, updated_at",
+    )
+    .single<BusinessInvitationRecord>();
 
   if (error) {
     throw toAppError(error);
   }
+
+  return data;
 }
 
 export async function updateBusinessInvitation(input: {
@@ -582,6 +607,49 @@ export async function acceptBusinessInvitation(inviteToken: string) {
   }
 
   return data as string;
+}
+
+export async function appendBusinessAuditLog(input: {
+  businessId: string;
+  entityType: string;
+  entityId?: string | null;
+  action: string;
+  detail?: string | null;
+  metadata?: Record<string, unknown>;
+}) {
+  const client = requireSupabase();
+  const { error } = await client.rpc("append_business_audit_log", {
+    target_business_id: input.businessId,
+    target_entity_type: input.entityType,
+    target_entity_id: input.entityId ?? null,
+    target_action: input.action,
+    target_detail: input.detail ?? null,
+    target_metadata: input.metadata ?? {},
+  });
+
+  if (error) {
+    throw toAppError(error);
+  }
+}
+
+export async function sendBusinessInvitationEmail(input: {
+  businessName: string;
+  inviteeEmail: string;
+  inviteeName?: string;
+  inviterName: string;
+  roleLabel: string;
+  inviteLink: string;
+}) {
+  const client = requireSupabase();
+  const { data, error } = await client.functions.invoke("send-business-invite", {
+    body: input,
+  });
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data as BusinessInviteEmailResult;
 }
 
 export async function insertSportInterest(payload: SportInterestInsert) {

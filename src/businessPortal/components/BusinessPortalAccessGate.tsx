@@ -27,10 +27,12 @@ export function BusinessPortalAccessGate() {
   const [emailState, setEmailState] = useState<"idle" | "sending" | "sent">("idle");
   const [emailMessage, setEmailMessage] = useState("");
   const [workspaceError, setWorkspaceError] = useState("");
+  const [inviteError, setInviteError] = useState("");
   const [formState, setFormState] = useState<BusinessPortalProfileDraft>(businessPortalProfileDraftSeed);
 
   const inviteToken = searchParams.get("invite");
   const supabaseAvailable = hasSupabaseConfig();
+  const [showCreateWorkspaceForm, setShowCreateWorkspaceForm] = useState(!inviteToken);
 
   useEffect(() => {
     if (user?.email) {
@@ -41,6 +43,10 @@ export function BusinessPortalAccessGate() {
       }));
     }
   }, [user?.email]);
+
+  useEffect(() => {
+    setShowCreateWorkspaceForm(!inviteToken);
+  }, [inviteToken]);
 
   const canShowAuthCard = useMemo(() => supabaseAvailable && !isAuthenticated, [isAuthenticated, supabaseAvailable]);
 
@@ -69,7 +75,8 @@ export function BusinessPortalAccessGate() {
     setEmailState("sending");
 
     try {
-      await signInWithMagicLink(email.trim().toLowerCase());
+      const redirectPath = inviteToken ? `/business-portal?invite=${encodeURIComponent(inviteToken)}` : "/business-portal";
+      await signInWithMagicLink(email.trim().toLowerCase(), redirectPath);
       setEmailState("sent");
       setEmailMessage("Check your email for the Supabase magic link, then come back here.");
     } catch (error) {
@@ -137,6 +144,7 @@ export function BusinessPortalAccessGate() {
     }
 
     setWorkspaceError("");
+    setInviteError("");
 
     try {
       await acceptInvitationToken(inviteToken);
@@ -144,7 +152,8 @@ export function BusinessPortalAccessGate() {
       setSearchParams(searchParams, { replace: true });
     } catch (error) {
       console.error(error);
-      setWorkspaceError(error instanceof Error ? error.message : "Unable to accept the business invitation.");
+      const message = error instanceof Error ? error.message : "Unable to accept the business invitation.";
+      setInviteError(message);
     }
   }
 
@@ -263,10 +272,13 @@ export function BusinessPortalAccessGate() {
           <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[0.88fr_1.12fr]">
             <GlassCard className="p-8">
               <p className="text-xs uppercase tracking-[0.3em] text-white/45">Workspace setup</p>
-              <h1 className="mt-3 font-display text-4xl font-black text-white">Create your business portal workspace</h1>
+              <h1 className="mt-3 font-display text-4xl font-black text-white">
+                {inviteToken ? "Join your business workspace" : "Create your business portal workspace"}
+              </h1>
               <p className="mt-4 text-sm leading-7 text-white/65">
-                You are signed in, but this account does not have an active business membership yet. Create your first
-                workspace or accept an invitation.
+                {inviteToken
+                  ? "You are signed in, but this account does not have an active business membership yet. If this invitation belongs to your email, accept it to join the workspace."
+                  : "You are signed in, but this account does not have an active business membership yet. Create your first workspace or accept an invitation."}
               </p>
 
               {inviteToken ? (
@@ -276,6 +288,7 @@ export function BusinessPortalAccessGate() {
                     This link includes a business invitation token. If this email matches the invite, you can join the
                     workspace directly.
                   </p>
+                  {inviteError ? <p className="mt-3 text-sm text-rose-200">{inviteError}</p> : null}
                   <button
                     type="button"
                     onClick={() => void handleAcceptInvite()}
@@ -283,6 +296,13 @@ export function BusinessPortalAccessGate() {
                     className="mt-4 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isAcceptingInvitation ? "Accepting..." : "Accept business invitation"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateWorkspaceForm((current) => !current)}
+                    className="mt-3 inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    {showCreateWorkspaceForm ? "Hide create-new-business form" : "Want to create a new business instead?"}
                   </button>
                 </div>
               ) : null}
@@ -293,7 +313,13 @@ export function BusinessPortalAccessGate() {
               </div>
             </GlassCard>
 
-            <GlassCard className="p-8">
+            <GlassCard className={`p-8 ${inviteToken && !showCreateWorkspaceForm ? "hidden lg:block lg:opacity-45" : ""}`}>
+              {inviteToken && !showCreateWorkspaceForm ? (
+                <div className="flex h-full min-h-[240px] items-center justify-center rounded-[1.5rem] border border-dashed border-white/15 bg-black/20 p-8 text-center text-sm leading-7 text-white/60">
+                  The create-new-business form is hidden so the invitation flow stays front and center. Use the button
+                  on the left if you want to create a separate workspace instead.
+                </div>
+              ) : (
               <form className="grid gap-4" onSubmit={handleCreateWorkspace}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2">
@@ -394,6 +420,7 @@ export function BusinessPortalAccessGate() {
                   {isProvisioningBusiness ? "Creating workspace..." : "Create business workspace"}
                 </button>
               </form>
+              )}
             </GlassCard>
           </div>
         </Container>

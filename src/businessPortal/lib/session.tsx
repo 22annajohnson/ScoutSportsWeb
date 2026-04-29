@@ -2,14 +2,17 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { User } from "@supabase/supabase-js";
 import {
   acceptBusinessInvitation,
+  appendBusinessAuditLog,
   createBusinessInvitation,
   createBusinessWorkspace,
   fetchActiveBusinessMemberships,
   fetchBusinessWorkspace,
+  getAppOrigin,
   getPreferredUserLabel,
   getSupabaseSession,
   hasSupabaseConfig,
   onSupabaseAuthStateChange,
+  sendBusinessInvitationEmail,
   signOutSupabase,
   updateBusinessInvitation,
   updateBusinessMembership,
@@ -49,6 +52,12 @@ type WorkspaceIdentity = typeof businessPortalOwner & {
   workspaceInitials: string;
 };
 
+type BusinessPortalPermissions = {
+  canManageProfile: boolean;
+  canManageTeam: boolean;
+  canManageBilling: boolean;
+};
+
 type BusinessPortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
@@ -57,6 +66,8 @@ type BusinessPortalSessionContextValue = {
   isProvisioningBusiness: boolean;
   isAcceptingInvitation: boolean;
   backendError: string;
+  currentRole: BusinessTeamMemberRole | null;
+  permissions: BusinessPortalPermissions;
   user: WorkspaceIdentity | null;
   business: ReturnType<typeof getBusinessPortalSnapshot> | null;
   billing: BusinessPortalBillingSettings | null;
@@ -66,7 +77,11 @@ type BusinessPortalSessionContextValue = {
   saveBusinessProfile: (nextProfile: BusinessPortalProfileDraft) => Promise<void>;
   resetBusinessProfile: () => void;
   saveBillingSettings: (nextBilling: BusinessPortalBillingSettings) => Promise<void>;
-  inviteTeamMember: (input: { name: string; email: string; role: BusinessTeamMemberRole }) => Promise<void>;
+  inviteTeamMember: (input: {
+    name: string;
+    email: string;
+    role: BusinessTeamMemberRole;
+  }) => Promise<{ inviteLink: string | null; emailSent: boolean; emailError: string | null }>;
   updateTeamMemberRole: (memberId: string, role: BusinessTeamMemberRole) => Promise<void>;
   toggleTeamMemberStatus: (memberId: string) => Promise<void>;
   signInAsDemo: () => void;
@@ -76,6 +91,12 @@ type BusinessPortalSessionContextValue = {
 };
 
 const BusinessPortalSessionContext = createContext<BusinessPortalSessionContextValue | null>(null);
+
+const ownerPermissions: BusinessPortalPermissions = {
+  canManageProfile: true,
+  canManageTeam: true,
+  canManageBilling: true,
+};
 
 function getInitials(value: string) {
   const words = value.trim().split(/\s+/).filter(Boolean);
@@ -278,6 +299,21 @@ function parseBudgetLabel(value: string) {
   return Number.isFinite(numeric) ? Math.round(numeric * 100) : 0;
 }
 
+async function captureAuditEvent(input: {
+  businessId: string;
+  entityType: string;
+  entityId?: string | null;
+  action: string;
+  detail?: string | null;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    await appendBusinessAuditLog(input);
+  } catch (error) {
+    console.error("Unable to append business audit log", error);
+  }
+}
+
 export function BusinessPortalSessionProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -288,6 +324,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
   const [backendError, setBackendError] = useState("");
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
+  const [currentRole, setCurrentRole] = useState<BusinessTeamMemberRole | null>(null);
   const [businessDraft, setBusinessDraft] = useState<BusinessPortalProfileDraft>(businessPortalProfileDraftSeed);
   const [billingState, setBillingState] = useState<BusinessPortalBillingSettings>(businessPortalBillingSeed);
   const [teamState, setTeamState] = useState<BusinessPortalWorkspaceMember[]>(businessPortalTeamSeed);
@@ -308,6 +345,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         ...businessPortalBillingSeed,
         billingContactEmail: user.email ?? businessPortalBillingSeed.billingContactEmail,
       });
+      setCurrentRole(null);
       setTeamState([]);
       setInvoiceState([]);
       setActivityState([]);
@@ -318,9 +356,11 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
       (targetBusinessId ? memberships.find((item) => item.business_id === targetBusinessId) : null) ?? memberships[0];
     const workspace = await fetchBusinessWorkspace(membership.business_id);
     const nextDraft = deriveBusinessDraft(workspace.business);
+    const nextRole = titleCaseRole(membership.role);
 
     setNeedsBusinessSetup(false);
     setBusinessId(workspace.business.id);
+    setCurrentRole(nextRole);
     setBusinessDraft(nextDraft);
     setBillingState(mapBillingProfile(workspace.billing, user.email ?? nextDraft.supportEmail));
     setTeamState([...mapInvitations(workspace.invitations), ...mapMemberships(workspace.team, user)]);
@@ -425,6 +465,17 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
       isProvisioningBusiness,
       isAcceptingInvitation,
       backendError,
+      currentRole,
+      permissions:
+        !isAuthenticated || !currentRole
+          ? ownerPermissions
+          : currentRole === "Owner"
+            ? ownerPermissions
+            : currentRole === "Manager"
+              ? { canManageProfile: true, canManageTeam: true, canManageBilling: false }
+              : currentRole === "Billing Admin"
+                ? { canManageProfile: false, canManageTeam: false, canManageBilling: true }
+                : { canManageProfile: false, canManageTeam: false, canManageBilling: false },
       user: isAuthenticated
         ? getWorkspaceIdentity(
             businessDraft,
@@ -441,6 +492,16 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         if (isSupabaseMode && businessId) {
           const updatedBusiness = await updateBusinessWorkspace(businessId, nextProfile);
           setBusinessDraft(deriveBusinessDraft(updatedBusiness));
+          await captureAuditEvent({
+            businessId,
+            entityType: "profile",
+            entityId: businessId,
+            action: "business_profile_updated",
+            detail: `Updated business profile settings for ${nextProfile.displayName}.`,
+          });
+          if (supabaseUser) {
+            await refreshWorkspace(supabaseUser, businessId);
+          }
           return;
         }
 
@@ -470,6 +531,16 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
             taxIdStatus: nextBilling.taxIdStatus,
           });
           setBillingState(mapBillingProfile(updatedBilling, nextBilling.billingContactEmail));
+          await captureAuditEvent({
+            businessId,
+            entityType: "billing",
+            entityId: updatedBilling.id,
+            action: "billing_profile_updated",
+            detail: `Updated billing contact and payment settings for the workspace.`,
+          });
+          if (supabaseUser) {
+            await refreshWorkspace(supabaseUser, businessId);
+          }
           return;
         }
 
@@ -478,15 +549,74 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
       },
       inviteTeamMember: async ({ name, email, role }) => {
         if (isSupabaseMode && businessId && supabaseUser) {
-          await createBusinessInvitation({
+          const invitation = await createBusinessInvitation({
             businessId,
             invitedName: name.trim(),
             email: email.trim().toLowerCase(),
             role: dbRole(role),
             invitedBy: supabaseUser.id,
           });
+          await captureAuditEvent({
+            businessId,
+            entityType: "invitation",
+            entityId: invitation.id,
+            action: "business_invitation_created",
+            detail: `Invited ${email.trim().toLowerCase()} as ${role}.`,
+            metadata: {
+              invitee_email: email.trim().toLowerCase(),
+              invitee_name: name.trim(),
+              role,
+            },
+          });
+          const inviteLink = `${getAppOrigin()}/business-portal?invite=${invitation.invite_token}`;
+          let emailSent = false;
+          let emailError: string | null = null;
+
+          try {
+            const delivery = await sendBusinessInvitationEmail({
+              businessName: businessDraft.displayName,
+              inviteeEmail: email.trim().toLowerCase(),
+              inviteeName: name.trim(),
+              inviterName: getPreferredUserLabel(supabaseUser),
+              roleLabel: role,
+              inviteLink,
+            });
+
+            emailSent = delivery.success;
+            emailError = delivery.success ? null : delivery.error ?? "Invite email could not be sent.";
+
+            await captureAuditEvent({
+              businessId,
+              entityType: "invitation",
+              entityId: invitation.id,
+              action: delivery.success ? "business_invitation_email_sent" : "business_invitation_email_failed",
+              detail: delivery.success
+                ? `Sent an invite email to ${email.trim().toLowerCase()}.`
+                : `Could not send the invite email to ${email.trim().toLowerCase()}.`,
+              metadata: {
+                invitee_email: email.trim().toLowerCase(),
+                provider: delivery.provider,
+                provider_message_id: delivery.id ?? null,
+                error: delivery.error ?? null,
+              },
+            });
+          } catch (error) {
+            emailError = error instanceof Error ? error.message : "Invite email could not be sent.";
+            await captureAuditEvent({
+              businessId,
+              entityType: "invitation",
+              entityId: invitation.id,
+              action: "business_invitation_email_failed",
+              detail: `Could not send the invite email to ${email.trim().toLowerCase()}.`,
+              metadata: {
+                invitee_email: email.trim().toLowerCase(),
+                error: emailError,
+              },
+            });
+          }
+
           await refreshWorkspace(supabaseUser, businessId);
-          return;
+          return { inviteLink, emailSent, emailError };
         }
 
         setTeamState((current) => {
@@ -505,6 +635,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
           window.localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(next));
           return next;
         });
+        return { inviteLink: null, emailSent: false, emailError: null };
       },
       updateTeamMemberRole: async (memberId, role) => {
         if (isSupabaseMode && businessId && supabaseUser) {
@@ -516,11 +647,25 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
               businessId,
               role: dbRole(role),
             });
+            await captureAuditEvent({
+              businessId,
+              entityType: "invitation",
+              entityId: memberId,
+              action: "business_invitation_role_updated",
+              detail: `Updated the invited role for ${currentMember.email} to ${role}.`,
+            });
           } else {
             await updateBusinessMembership({
               membershipId: memberId,
               businessId,
               role: dbRole(role),
+            });
+            await captureAuditEvent({
+              businessId,
+              entityType: "membership",
+              entityId: memberId,
+              action: "business_membership_role_updated",
+              detail: `Updated the workspace role for ${currentMember?.email ?? "a teammate"} to ${role}.`,
             });
           }
 
@@ -551,11 +696,31 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
               businessId,
               status: nextStatus === "Paused" ? "revoked" : "pending",
             });
+            await captureAuditEvent({
+              businessId,
+              entityType: "invitation",
+              entityId: memberId,
+              action: nextStatus === "Paused" ? "business_invitation_revoked" : "business_invitation_restored",
+              detail:
+                nextStatus === "Paused"
+                  ? `Revoked the pending invite for ${currentMember.email}.`
+                  : `Restored the pending invite for ${currentMember.email}.`,
+            });
           } else {
             await updateBusinessMembership({
               membershipId: memberId,
               businessId,
               status: nextStatus === "Active" ? "active" : "paused",
+            });
+            await captureAuditEvent({
+              businessId,
+              entityType: "membership",
+              entityId: memberId,
+              action: nextStatus === "Active" ? "business_membership_reactivated" : "business_membership_paused",
+              detail:
+                nextStatus === "Active"
+                  ? `Reactivated workspace access for ${currentMember.email}.`
+                  : `Paused workspace access for ${currentMember.email}.`,
             });
           }
 
@@ -586,6 +751,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         setIsSupabaseMode(false);
         setIsAuthenticated(true);
         setNeedsBusinessSetup(false);
+        setCurrentRole("Owner");
       },
       signOut: async () => {
         if (isSupabaseMode) {
@@ -593,6 +759,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
           setSupabaseUser(null);
           setBusinessId(null);
           setNeedsBusinessSetup(false);
+          setCurrentRole(null);
           return;
         }
 
@@ -647,6 +814,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
       billingState,
       businessDraft,
       businessId,
+      currentRole,
       invoiceState,
       isAcceptingInvitation,
       isAuthenticated,
