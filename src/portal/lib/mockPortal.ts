@@ -51,7 +51,7 @@ export type PortalHistoryItem = {
   title: string;
   dateLabel: string;
   sport: string;
-  result: string;
+  result: "Win" | "Loss" | "Draw";
   detail: string;
   ratingDelta: string;
   teammateLine: string;

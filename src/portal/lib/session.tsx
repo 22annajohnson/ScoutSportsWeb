@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session, User } from "@supabase/supabase-js";
 import { routes } from "@/lib/routes";
 import {
+  fetchPortalHistory,
   fetchPortalMembership,
   fetchPortalProfile,
   fetchPortalSportBreakdowns,
@@ -12,9 +13,11 @@ import {
 } from "@/lib/supabase";
 import {
   getPortalProfileSnapshot,
+  portalHistoryPreview,
   portalMembership,
   portalPlayer,
   portalProfileDraftSeed,
+  type PortalHistoryItem,
   portalSportBreakdowns,
   portalStatsSnapshot,
   type PortalMembership,
@@ -159,6 +162,63 @@ function mapSportBreakdownRecords(records: Awaited<ReturnType<typeof fetchPortal
   }));
 }
 
+function formatHistoryDateLabel(playedAt: string) {
+  const date = new Date(playedAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatHistoryResult(result: "win" | "loss" | "draw"): PortalHistoryItem["result"] {
+  switch (result) {
+    case "loss":
+      return "Loss";
+    case "draw":
+      return "Draw";
+    default:
+      return "Win";
+  }
+}
+
+function formatRatingDelta(value: number) {
+  if (value > 0) {
+    return `+${value}`;
+  }
+
+  return String(value);
+}
+
+function formatDurationLabel(durationMinutes: number | null) {
+  if (!durationMinutes || durationMinutes <= 0) {
+    return "Duration unknown";
+  }
+
+  return `${durationMinutes} min`;
+}
+
+function mapHistoryRecords(records: Awaited<ReturnType<typeof fetchPortalHistory>>): PortalHistoryItem[] {
+  return records.map((record) => ({
+    id: record.id,
+    title: record.title,
+    dateLabel: formatHistoryDateLabel(record.played_at),
+    sport: record.sport,
+    result: formatHistoryResult(record.result),
+    detail: record.detail,
+    ratingDelta: formatRatingDelta(record.rating_delta),
+    teammateLine: record.teammate_line,
+    durationLabel: formatDurationLabel(record.duration_minutes),
+    venueLabel: record.venue_label,
+    scoreLine: record.score_line,
+  }));
+}
+
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
@@ -166,14 +226,17 @@ type PortalSessionContextValue = {
   isProfileRemote: boolean;
   isMembershipRemote: boolean;
   isStatsRemote: boolean;
+  isHistoryRemote: boolean;
   isMembershipLoading: boolean;
   isStatsLoading: boolean;
+  isHistoryLoading: boolean;
   authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
   membership: PortalMembership | null;
   stats: PortalStatsSnapshot | null;
   sportBreakdowns: PortalSportBreakdown[];
+  history: PortalHistoryItem[];
   saveProfile: (nextProfile: PortalProfileDraft) => Promise<void>;
   resetProfile: () => void;
   signInWithEmail: (email: string) => Promise<void>;
@@ -194,10 +257,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [stats, setStats] = useState<PortalStatsSnapshot>(portalStatsSnapshot);
   const [sportBreakdowns, setSportBreakdowns] = useState<PortalSportBreakdown[]>(portalSportBreakdowns);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [history, setHistory] = useState<PortalHistoryItem[]>(portalHistoryPreview);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
   const isProfileRemote = Boolean(authUser);
   const isMembershipRemote = Boolean(authUser);
   const isStatsRemote = Boolean(authUser);
+  const isHistoryRemote = Boolean(authUser);
 
   const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
@@ -394,6 +460,46 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     };
   }, [authUser]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setHistory(portalHistoryPreview);
+      setIsHistoryLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsHistoryLoading(true);
+
+    async function loadHistory() {
+      try {
+        const records = await fetchPortalHistory(currentAuthUser.id);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setHistory(records.length > 0 ? mapHistoryRecords(records) : portalHistoryPreview);
+      } catch (error) {
+        console.error("Unable to load remote portal history", error);
+
+        if (isMounted) {
+          setHistory(portalHistoryPreview);
+        }
+      } finally {
+        if (isMounted) {
+          setIsHistoryLoading(false);
+        }
+      }
+    }
+
+    void loadHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
@@ -402,14 +508,17 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isProfileRemote,
       isMembershipRemote,
       isStatsRemote,
+      isHistoryRemote,
       isMembershipLoading,
       isStatsLoading,
+      isHistoryLoading,
       authUser,
       player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
       membership: isAuthenticated ? membership : null,
       stats: isAuthenticated ? stats : null,
       sportBreakdowns: isAuthenticated ? sportBreakdowns : [],
+      history: isAuthenticated ? history : [],
       saveProfile: async (nextProfile) => {
         setProfileDraft(nextProfile);
         const currentAuthUser = authUser;
@@ -476,10 +585,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isMembershipLoading,
       isMembershipRemote,
       isProfileRemote,
+      isHistoryLoading,
+      isHistoryRemote,
       isStatsLoading,
       isStatsRemote,
       isReady,
       isSupabaseAuthEnabled,
+      history,
       membership,
       sportBreakdowns,
       stats,
