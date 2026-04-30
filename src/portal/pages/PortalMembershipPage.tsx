@@ -2,14 +2,15 @@ import { CreditCard, ReceiptText, ShieldCheck, Sparkles, Star, WalletCards } fro
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { routes } from "@/lib/routes";
-import { portalInvoiceHistory, portalMembershipBenefitsByTier } from "../lib/mockPortal";
+import { portalMembershipBenefitsByTier } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
 import { usePortalSession } from "../lib/session";
 
 export function PortalMembershipPage() {
-  const { membership, isMembershipLoading, isMembershipRemote } = usePortalSession();
+  const { billingProfile, invoices, isBillingLoading, isBillingRemote, membership, isMembershipLoading, isMembershipRemote } =
+    usePortalSession();
 
-  if (!membership) {
+  if (!billingProfile || !membership) {
     return null;
   }
 
@@ -21,13 +22,21 @@ export function PortalMembershipPage() {
         eyebrow="Membership"
         title="Membership and billing visibility."
         description={
-          isMembershipRemote
-            ? "Your current membership record is now loading from the portal account layer. Payment methods and invoices can stay preview-backed until billing sync is fully connected."
+          isMembershipRemote && isBillingRemote
+            ? "Your current membership, payment method, and invoice timeline now read from the portal account layer. This keeps the page compatible with future Stripe or app-store sync without tying the UI to one provider."
+            : isMembershipRemote
+              ? "Your current membership record is now loading from the portal account layer. Payment methods and invoices can stay preview-backed until billing sync is fully connected."
             : "This shell is ready for a third-party billing source such as Stripe. Upgrades made online or in-app should eventually resolve into one normalized membership state here."
         }
         aside={
           <div className="rounded-2xl border border-blue-300/20 bg-blue-500/10 px-4 py-4 text-sm text-blue-200">
-            {isMembershipLoading ? "Syncing membership..." : isMembershipRemote ? "Membership record connected" : "Billing integration planned"}
+            {isMembershipLoading || isBillingLoading
+              ? "Syncing billing..."
+              : isMembershipRemote && isBillingRemote
+                ? "Billing records connected"
+                : isMembershipRemote
+                  ? "Membership record connected"
+                  : "Billing integration planned"}
           </div>
         }
       />
@@ -59,7 +68,7 @@ export function PortalMembershipPage() {
                 {[
                   ["Renews", membership.renewalLabel],
                   ["Billing source", membership.billingSource],
-                  ["Payment method", membership.paymentMethod],
+                  ["Payment method", billingProfile.paymentMethod || membership.paymentMethod],
                   ["Membership sync", membership.syncedAccessNote],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
@@ -110,13 +119,17 @@ export function PortalMembershipPage() {
             },
             {
               icon: WalletCards,
-              title: "What a future billing source should own",
-              text: "Subscription state, plan changes, invoice generation, renewal timing, payment method, and cancellation status should come from the billing provider rather than marketing-site forms.",
+              title: isBillingRemote ? "Connected billing profile" : "What a future billing source should own",
+              text: isBillingRemote
+                ? `Billing contact: ${billingProfile.billingContactEmail} • Address: ${billingProfile.billingAddress} • Tax status: ${billingProfile.taxStatus}`
+                : "Subscription state, plan changes, invoice generation, renewal timing, payment method, and cancellation status should come from the billing provider rather than marketing-site forms.",
             },
             {
               icon: ReceiptText,
-              title: "Invoice history preview",
-              text: "This page is already designed to hold a real billing timeline once Stripe or another provider is connected, even while current plan state comes from Supabase first.",
+              title: isBillingRemote ? "Invoice timeline connected" : "Invoice history preview",
+              text: isBillingRemote
+                ? "The invoice list below is now reading from the portal billing layer, so provider sync can update the timeline without changing this front-end contract."
+                : "This page is already designed to hold a real billing timeline once Stripe or another provider is connected, even while current plan state comes from Supabase first.",
             },
           ].map((item) => {
             const Icon = item.icon;
@@ -142,7 +155,13 @@ export function PortalMembershipPage() {
             </div>
 
             <div className="mt-6 grid gap-4">
-              {portalInvoiceHistory.map((invoice) => (
+              {invoices.length === 0 ? (
+                <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6 text-sm leading-7 text-white/65">
+                  No invoices have been recorded for this player account yet.
+                </div>
+              ) : null}
+
+              {invoices.map((invoice) => (
                 <div key={invoice.id} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
