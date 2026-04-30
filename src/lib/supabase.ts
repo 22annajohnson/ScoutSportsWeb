@@ -221,6 +221,23 @@ export type PortalSportBreakdownRecord = {
   updated_at?: string;
 };
 
+export type PortalHistoryRecord = {
+  id: string;
+  user_id: string;
+  title: string;
+  played_at: string;
+  sport: string;
+  result: "win" | "loss" | "draw";
+  detail: string;
+  rating_delta: number;
+  teammate_line: string;
+  duration_minutes: number | null;
+  venue_label: string;
+  score_line: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -805,6 +822,25 @@ export async function fetchPortalSportBreakdowns(userId: string) {
     .order("sort_order", { ascending: true, nullsFirst: false })
     .order("sport", { ascending: true })
     .returns<PortalSportBreakdownRecord[]>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalHistory(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_match_history")
+    .select(
+      "id, user_id, title, played_at, sport, result, detail, rating_delta, teammate_line, duration_minutes, venue_label, score_line, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .order("played_at", { ascending: false })
+    .returns<PortalHistoryRecord[]>();
 
   if (error) {
     throw toAppError(error);

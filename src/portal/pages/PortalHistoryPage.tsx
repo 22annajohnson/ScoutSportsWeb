@@ -1,28 +1,42 @@
 import { useMemo, useState } from "react";
 import { Clock3, Filter, MapPin } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
-import { portalHistoryPreview } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
+import { usePortalSession } from "../lib/session";
 
 export function PortalHistoryPage() {
-  const [resultFilter, setResultFilter] = useState<"All" | "Win" | "Loss">("All");
-  const [sportFilter, setSportFilter] = useState<"All" | "Pickleball" | "Tennis" | "Padel">("All");
+  const { history, isHistoryLoading, isHistoryRemote } = usePortalSession();
+  const [resultFilter, setResultFilter] = useState<"All" | "Win" | "Loss" | "Draw">("All");
+  const [sportFilter, setSportFilter] = useState<string>("All");
+
+  const resultOptions = useMemo(() => {
+    const uniqueResults = Array.from(new Set(history.map((item) => item.result)));
+    return ["All", ...uniqueResults] as const;
+  }, [history]);
+
+  const sportOptions = useMemo(() => {
+    return ["All", ...Array.from(new Set(history.map((item) => item.sport)))];
+  }, [history]);
 
   const filteredHistory = useMemo(() => {
-    return portalHistoryPreview.filter((item) => {
+    return history.filter((item) => {
       const matchesResult = resultFilter === "All" || item.result === resultFilter;
       const matchesSport = sportFilter === "All" || item.sport === sportFilter;
 
       return matchesResult && matchesSport;
     });
-  }, [resultFilter, sportFilter]);
+  }, [history, resultFilter, sportFilter]);
 
   return (
     <>
       <PortalPageHeader
         eyebrow="History"
         title="Recent matches and game results."
-        description="This page now supports the structure a real player history needs: filtering, venue detail, score context, and match-by-match movement. The next step is replacing preview items with real account-scoped match records."
+        description={
+          isHistoryRemote
+            ? "Your recent matches now come from the portal account layer, with filtering, venue context, scorelines, and movement all ready for live history reads."
+            : "This page now supports the structure a real player history needs: filtering, venue detail, score context, and match-by-match movement. The next step is replacing preview items with real account-scoped match records."
+        }
       />
 
       <GlassCard className="p-7">
@@ -44,7 +58,7 @@ export function PortalHistoryPage() {
                 Result
               </p>
               <div className="flex flex-wrap gap-2">
-                {(["All", "Win", "Loss"] as const).map((option) => (
+                {resultOptions.map((option) => (
                   <button
                     key={option}
                     type="button"
@@ -67,7 +81,7 @@ export function PortalHistoryPage() {
                 Sport
               </p>
               <div className="flex flex-wrap gap-2">
-                {(["All", "Pickleball", "Tennis", "Padel"] as const).map((option) => (
+                {sportOptions.map((option) => (
                   <button
                     key={option}
                     type="button"
@@ -85,6 +99,8 @@ export function PortalHistoryPage() {
             </div>
           </div>
         </div>
+
+        {isHistoryLoading ? <p className="mt-6 text-sm text-blue-200">Refreshing recent match history...</p> : null}
 
         <div className="mt-6 grid gap-4">
           {filteredHistory.length ? (
