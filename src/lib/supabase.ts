@@ -220,6 +220,88 @@ export type PortalMembershipRecord = {
   updated_at?: string;
 };
 
+export type PortalStatsSummaryRecord = {
+  user_id: string;
+  scout_score: number;
+  city_rank: string;
+  record_summary: string;
+  streak_summary: string;
+  bracket_finish_summary: string;
+  recent_trend_summary: string;
+  recent_matches: number;
+  win_rate_label: string;
+  favorite_format: string;
+  growth_channel: string | null;
+  current_edge: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalSportBreakdownRecord = {
+  id: string;
+  user_id: string;
+  sport: string;
+  rating: number;
+  record_summary: string;
+  trend_summary: string;
+  note: string;
+  sort_order: number | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalHistoryRecord = {
+  id: string;
+  user_id: string;
+  title: string;
+  played_at: string;
+  sport: string;
+  result: "win" | "loss" | "draw";
+  detail: string;
+  rating_delta: number;
+  teammate_line: string;
+  duration_minutes: number | null;
+  venue_label: string;
+  score_line: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalBillingProfileRecord = {
+  user_id: string;
+  payment_method_label: string | null;
+  billing_contact_email: string | null;
+  billing_address: string | null;
+  tax_status: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalInvoiceRecord = {
+  id: string;
+  user_id: string;
+  external_invoice_id: string | null;
+  amount_cents: number;
+  status: "paid" | "pending" | "refunded";
+  description: string;
+  invoiced_at: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalSettingsPreferencesRecord = {
+  user_id: string;
+  match_alerts_email: boolean;
+  bracket_updates_email: boolean;
+  circle_activity_email: boolean;
+  partner_offers_email: boolean;
+  sms_alerts_enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalSettingsPreferencesUpsert = Omit<PortalSettingsPreferencesRecord, "created_at" | "updated_at">;
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -928,4 +1010,122 @@ export async function fetchPortalMembership(userId: string) {
   }
 
   return data;
+}
+
+export async function fetchPortalStatsSummary(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_stats_summaries")
+    .select(
+      "user_id, scout_score, city_rank, record_summary, streak_summary, bracket_finish_summary, recent_trend_summary, recent_matches, win_rate_label, favorite_format, growth_channel, current_edge, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalStatsSummaryRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalSportBreakdowns(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_sport_breakdowns")
+    .select("id, user_id, sport, rating, record_summary, trend_summary, note, sort_order, created_at, updated_at")
+    .eq("user_id", userId)
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("sport", { ascending: true })
+    .returns<PortalSportBreakdownRecord[]>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalHistory(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_match_history")
+    .select(
+      "id, user_id, title, played_at, sport, result, detail, rating_delta, teammate_line, duration_minutes, venue_label, score_line, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .order("played_at", { ascending: false })
+    .returns<PortalHistoryRecord[]>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalBillingProfile(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_billing_profiles")
+    .select("user_id, payment_method_label, billing_contact_email, billing_address, tax_status, created_at, updated_at")
+    .eq("user_id", userId)
+    .maybeSingle<PortalBillingProfileRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalInvoices(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_invoices")
+    .select("id, user_id, external_invoice_id, amount_cents, status, description, invoiced_at, created_at, updated_at")
+    .eq("user_id", userId)
+    .order("invoiced_at", { ascending: false })
+    .returns<PortalInvoiceRecord[]>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalSettingsPreferences(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_settings_preferences")
+    .select(
+      "user_id, match_alerts_email, bracket_updates_email, circle_activity_email, partner_offers_email, sms_alerts_enabled, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalSettingsPreferencesRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function upsertPortalSettingsPreferences(payload: PortalSettingsPreferencesUpsert) {
+  const client = requireSupabase();
+
+  const { error } = await client.from("player_portal_settings_preferences").upsert(payload, {
+    onConflict: "user_id",
+  });
+
+  if (error) {
+    throw toAppError(error);
+  }
 }

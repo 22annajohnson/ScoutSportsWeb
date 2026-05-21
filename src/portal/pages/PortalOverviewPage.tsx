@@ -2,14 +2,13 @@ import { ArrowUpRight, Clock3, Sparkles, Trophy, UserRound } from "lucide-react"
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { routes } from "@/lib/routes";
-import { portalHistoryPreview, portalStatsSnapshot } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
 import { usePortalSession } from "../lib/session";
 
 export function PortalOverviewPage() {
-  const { membership, player, profile } = usePortalSession();
+  const { history, membership, player, profile, stats } = usePortalSession();
 
-  if (!membership || !player || !profile) {
+  if (!membership || !player || !profile || !stats) {
     return null;
   }
 
@@ -34,10 +33,10 @@ export function PortalOverviewPage() {
 
       <div className="grid gap-5 xl:grid-cols-4">
         {[
-          { label: "Scout score", value: String(portalStatsSnapshot.scoutScore), detail: portalStatsSnapshot.recentTrend, icon: Trophy },
+          { label: "Scout score", value: String(stats.scoutScore), detail: stats.recentTrend, icon: Trophy },
           { label: "Profile completion", value: `${profile.completionPercent}%`, detail: `${profile.primarySport} • ${profile.city}`, icon: UserRound },
           { label: "Renewal", value: renewalValue, detail: membership.billingSummary, icon: Clock3 },
-          { label: "Recent form", value: "4 of 5", detail: portalStatsSnapshot.record, icon: Sparkles },
+          { label: "Recent form", value: stats.streak, detail: stats.record, icon: Sparkles },
         ].map((item) => {
           const Icon = item.icon;
 
@@ -91,7 +90,7 @@ export function PortalOverviewPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-white/45">Recent activity preview</p>
           <h3 className="mt-3 font-display text-3xl font-black text-white">Game history snapshot</h3>
           <div className="mt-6 grid gap-4">
-            {portalHistoryPreview.map((item) => (
+            {history.slice(0, 4).map((item) => (
               <div key={`${item.title}-${item.dateLabel}`} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>

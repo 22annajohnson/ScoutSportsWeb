@@ -1,14 +1,39 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { routes } from "@/lib/routes";
-import { fetchPortalMembership, fetchPortalProfile, hasSupabaseConfig, supabase, upsertPortalProfile } from "@/lib/supabase";
 import {
+  fetchPortalBillingProfile,
+  fetchPortalInvoices,
+  fetchPortalHistory,
+  fetchPortalMembership,
+  fetchPortalProfile,
+  fetchPortalSettingsPreferences,
+  fetchPortalSportBreakdowns,
+  fetchPortalStatsSummary,
+  hasSupabaseConfig,
+  supabase,
+  upsertPortalSettingsPreferences,
+  upsertPortalProfile,
+} from "@/lib/supabase";
+import {
+  portalBillingProfile,
   getPortalProfileSnapshot,
+  portalHistoryPreview,
+  portalInvoiceHistory,
   portalMembership,
   portalPlayer,
   portalProfileDraftSeed,
+  portalSettingsPreferences,
+  type PortalBillingProfile,
+  type PortalHistoryItem,
+  type PortalInvoiceItem,
+  portalSportBreakdowns,
+  portalStatsSnapshot,
   type PortalMembership,
   type PortalProfileDraft,
+  type PortalSettingsPreferences,
+  type PortalSportBreakdown,
+  type PortalStatsSnapshot,
 } from "./mockPortal";
 
 const STORAGE_KEY = "scout.portal.demoSession";
@@ -117,17 +142,190 @@ function mapMembershipRecord(record: Awaited<ReturnType<typeof fetchPortalMember
   };
 }
 
+function mapStatsSummaryRecord(record: Awaited<ReturnType<typeof fetchPortalStatsSummary>>): PortalStatsSnapshot | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    scoutScore: record.scout_score,
+    cityRank: record.city_rank,
+    record: record.record_summary,
+    streak: record.streak_summary,
+    bracketFinish: record.bracket_finish_summary,
+    recentTrend: record.recent_trend_summary,
+    recentMatches: record.recent_matches,
+    winRate: record.win_rate_label,
+    favoriteFormat: record.favorite_format,
+    growthChannel: record.growth_channel ?? portalStatsSnapshot.growthChannel,
+    currentEdge: record.current_edge ?? portalStatsSnapshot.currentEdge,
+  };
+}
+
+function mapSportBreakdownRecords(records: Awaited<ReturnType<typeof fetchPortalSportBreakdowns>>): PortalSportBreakdown[] {
+  return records.map((record) => ({
+    sport: record.sport,
+    rating: record.rating,
+    record: record.record_summary,
+    trend: record.trend_summary,
+    note: record.note,
+  }));
+}
+
+function formatHistoryDateLabel(playedAt: string) {
+  const date = new Date(playedAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatHistoryResult(result: "win" | "loss" | "draw"): PortalHistoryItem["result"] {
+  switch (result) {
+    case "loss":
+      return "Loss";
+    case "draw":
+      return "Draw";
+    default:
+      return "Win";
+  }
+}
+
+function formatRatingDelta(value: number) {
+  if (value > 0) {
+    return `+${value}`;
+  }
+
+  return String(value);
+}
+
+function formatDurationLabel(durationMinutes: number | null) {
+  if (!durationMinutes || durationMinutes <= 0) {
+    return "Duration unknown";
+  }
+
+  return `${durationMinutes} min`;
+}
+
+function mapHistoryRecords(records: Awaited<ReturnType<typeof fetchPortalHistory>>): PortalHistoryItem[] {
+  return records.map((record) => ({
+    id: record.id,
+    title: record.title,
+    dateLabel: formatHistoryDateLabel(record.played_at),
+    sport: record.sport,
+    result: formatHistoryResult(record.result),
+    detail: record.detail,
+    ratingDelta: formatRatingDelta(record.rating_delta),
+    teammateLine: record.teammate_line,
+    durationLabel: formatDurationLabel(record.duration_minutes),
+    venueLabel: record.venue_label,
+    scoreLine: record.score_line,
+  }));
+}
+
+function mapBillingProfileRecord(record: Awaited<ReturnType<typeof fetchPortalBillingProfile>>): PortalBillingProfile | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    paymentMethod: record.payment_method_label ?? "Payment method not synced yet",
+    billingContactEmail: record.billing_contact_email ?? "No billing contact on file",
+    billingAddress: record.billing_address ?? "Billing address not synced yet",
+    taxStatus: record.tax_status ?? "Tax status unavailable",
+  };
+}
+
+function formatInvoiceDateLabel(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatInvoiceAmount(amountCents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amountCents / 100);
+}
+
+function formatInvoiceStatus(status: "paid" | "pending" | "refunded"): PortalInvoiceItem["status"] {
+  switch (status) {
+    case "pending":
+      return "Pending";
+    case "refunded":
+      return "Refunded";
+    default:
+      return "Paid";
+  }
+}
+
+function mapInvoiceRecords(records: Awaited<ReturnType<typeof fetchPortalInvoices>>): PortalInvoiceItem[] {
+  return records.map((record) => ({
+    id: record.external_invoice_id || record.id,
+    dateLabel: formatInvoiceDateLabel(record.invoiced_at),
+    amountLabel: formatInvoiceAmount(record.amount_cents),
+    status: formatInvoiceStatus(record.status),
+    description: record.description,
+  }));
+}
+
+function mapSettingsPreferencesRecord(
+  record: Awaited<ReturnType<typeof fetchPortalSettingsPreferences>>,
+): PortalSettingsPreferences | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    matchAlertsEmail: record.match_alerts_email,
+    bracketUpdatesEmail: record.bracket_updates_email,
+    circleActivityEmail: record.circle_activity_email,
+    partnerOffersEmail: record.partner_offers_email,
+    smsAlertsEnabled: record.sms_alerts_enabled,
+  };
+}
+
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
   isSupabaseAuthEnabled: boolean;
   isProfileRemote: boolean;
   isMembershipRemote: boolean;
+  isStatsRemote: boolean;
+  isHistoryRemote: boolean;
+  isBillingRemote: boolean;
+  isSettingsRemote: boolean;
   isMembershipLoading: boolean;
+  isStatsLoading: boolean;
+  isHistoryLoading: boolean;
+  isBillingLoading: boolean;
+  isSettingsLoading: boolean;
   authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
   membership: PortalMembership | null;
+  billingProfile: PortalBillingProfile | null;
+  invoices: PortalInvoiceItem[];
+  settingsPreferences: PortalSettingsPreferences | null;
+  stats: PortalStatsSnapshot | null;
+  sportBreakdowns: PortalSportBreakdown[];
+  history: PortalHistoryItem[];
+  saveSettingsPreferences: (nextPreferences: PortalSettingsPreferences) => Promise<void>;
   saveProfile: (nextProfile: PortalProfileDraft) => Promise<void>;
   resetProfile: () => void;
   signInWithEmail: (email: string) => Promise<void>;
@@ -145,9 +343,23 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [profileDraft, setProfileDraft] = useState<PortalProfileDraft>(portalProfileDraftSeed);
   const [membership, setMembership] = useState<PortalMembership>(portalMembership);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
+  const [stats, setStats] = useState<PortalStatsSnapshot>(portalStatsSnapshot);
+  const [sportBreakdowns, setSportBreakdowns] = useState<PortalSportBreakdown[]>(portalSportBreakdowns);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [history, setHistory] = useState<PortalHistoryItem[]>(portalHistoryPreview);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [billingProfile, setBillingProfile] = useState<PortalBillingProfile>(portalBillingProfile);
+  const [invoices, setInvoices] = useState<PortalInvoiceItem[]>(portalInvoiceHistory);
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [settingsPreferences, setSettingsPreferences] = useState<PortalSettingsPreferences>(portalSettingsPreferences);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
   const isProfileRemote = Boolean(authUser);
   const isMembershipRemote = Boolean(authUser);
+  const isStatsRemote = Boolean(authUser);
+  const isHistoryRemote = Boolean(authUser);
+  const isBillingRemote = Boolean(authUser);
+  const isSettingsRemote = Boolean(authUser);
 
   const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
@@ -298,6 +510,178 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     };
   }, [authUser]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setStats(portalStatsSnapshot);
+      setSportBreakdowns(portalSportBreakdowns);
+      setIsStatsLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsStatsLoading(true);
+
+    async function loadStats() {
+      try {
+        const [summaryRecord, breakdownRecords] = await Promise.all([
+          fetchPortalStatsSummary(currentAuthUser.id),
+          fetchPortalSportBreakdowns(currentAuthUser.id),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setStats(mapStatsSummaryRecord(summaryRecord) ?? portalStatsSnapshot);
+        setSportBreakdowns(breakdownRecords.length > 0 ? mapSportBreakdownRecords(breakdownRecords) : portalSportBreakdowns);
+      } catch (error) {
+        console.error("Unable to load remote portal stats", error);
+
+        if (isMounted) {
+          setStats(portalStatsSnapshot);
+          setSportBreakdowns(portalSportBreakdowns);
+        }
+      } finally {
+        if (isMounted) {
+          setIsStatsLoading(false);
+        }
+      }
+    }
+
+    void loadStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!authUser) {
+      setHistory(portalHistoryPreview);
+      setIsHistoryLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsHistoryLoading(true);
+
+    async function loadHistory() {
+      try {
+        const records = await fetchPortalHistory(currentAuthUser.id);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setHistory(records.length > 0 ? mapHistoryRecords(records) : portalHistoryPreview);
+      } catch (error) {
+        console.error("Unable to load remote portal history", error);
+
+        if (isMounted) {
+          setHistory(portalHistoryPreview);
+        }
+      } finally {
+        if (isMounted) {
+          setIsHistoryLoading(false);
+        }
+      }
+    }
+
+    void loadHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!authUser) {
+      setBillingProfile(portalBillingProfile);
+      setInvoices(portalInvoiceHistory);
+      setIsBillingLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsBillingLoading(true);
+
+    async function loadBilling() {
+      try {
+        const [profileRecord, invoiceRecords] = await Promise.all([
+          fetchPortalBillingProfile(currentAuthUser.id),
+          fetchPortalInvoices(currentAuthUser.id),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setBillingProfile(mapBillingProfileRecord(profileRecord) ?? portalBillingProfile);
+        setInvoices(invoiceRecords.length > 0 ? mapInvoiceRecords(invoiceRecords) : portalInvoiceHistory);
+      } catch (error) {
+        console.error("Unable to load remote portal billing", error);
+
+        if (isMounted) {
+          setBillingProfile(portalBillingProfile);
+          setInvoices(portalInvoiceHistory);
+        }
+      } finally {
+        if (isMounted) {
+          setIsBillingLoading(false);
+        }
+      }
+    }
+
+    void loadBilling();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!authUser) {
+      setSettingsPreferences(portalSettingsPreferences);
+      setIsSettingsLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsSettingsLoading(true);
+
+    async function loadSettingsPreferences() {
+      try {
+        const record = await fetchPortalSettingsPreferences(currentAuthUser.id);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSettingsPreferences(mapSettingsPreferencesRecord(record) ?? portalSettingsPreferences);
+      } catch (error) {
+        console.error("Unable to load remote portal settings preferences", error);
+
+        if (isMounted) {
+          setSettingsPreferences(portalSettingsPreferences);
+        }
+      } finally {
+        if (isMounted) {
+          setIsSettingsLoading(false);
+        }
+      }
+    }
+
+    void loadSettingsPreferences();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
@@ -305,11 +689,42 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isSupabaseAuthEnabled,
       isProfileRemote,
       isMembershipRemote,
+      isStatsRemote,
+      isHistoryRemote,
+      isBillingRemote,
+      isSettingsRemote,
       isMembershipLoading,
+      isStatsLoading,
+      isHistoryLoading,
+      isBillingLoading,
+      isSettingsLoading,
       authUser,
       player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
       membership: isAuthenticated ? membership : null,
+      billingProfile: isAuthenticated ? billingProfile : null,
+      invoices: isAuthenticated ? invoices : [],
+      settingsPreferences: isAuthenticated ? settingsPreferences : null,
+      stats: isAuthenticated ? stats : null,
+      sportBreakdowns: isAuthenticated ? sportBreakdowns : [],
+      history: isAuthenticated ? history : [],
+      saveSettingsPreferences: async (nextPreferences) => {
+        setSettingsPreferences(nextPreferences);
+        const currentAuthUser = authUser;
+
+        if (!currentAuthUser) {
+          return;
+        }
+
+        await upsertPortalSettingsPreferences({
+          user_id: currentAuthUser.id,
+          match_alerts_email: nextPreferences.matchAlertsEmail,
+          bracket_updates_email: nextPreferences.bracketUpdatesEmail,
+          circle_activity_email: nextPreferences.circleActivityEmail,
+          partner_offers_email: nextPreferences.partnerOffersEmail,
+          sms_alerts_enabled: nextPreferences.smsAlertsEnabled,
+        });
+      },
       saveProfile: async (nextProfile) => {
         setProfileDraft(nextProfile);
         const currentAuthUser = authUser;
@@ -376,9 +791,23 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isMembershipLoading,
       isMembershipRemote,
       isProfileRemote,
+      isHistoryLoading,
+      isHistoryRemote,
+      isBillingLoading,
+      isBillingRemote,
+      isSettingsLoading,
+      isSettingsRemote,
+      isStatsLoading,
+      isStatsRemote,
       isReady,
       isSupabaseAuthEnabled,
+      billingProfile,
+      history,
+      invoices,
       membership,
+      settingsPreferences,
+      sportBreakdowns,
+      stats,
       profileDraft,
     ],
   );
