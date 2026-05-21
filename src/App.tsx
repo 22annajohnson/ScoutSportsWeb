@@ -22,6 +22,7 @@ import { BusinessPortalAccessGate } from "@/businessPortal/components/BusinessPo
 import { BusinessPortalLayout } from "@/businessPortal/components/BusinessPortalLayout";
 import { BusinessPortalActivityPage } from "@/businessPortal/pages/BusinessPortalActivityPage";
 import { BusinessPortalBillingPage } from "@/businessPortal/pages/BusinessPortalBillingPage";
+import { BusinessPortalContentPage } from "@/businessPortal/pages/BusinessPortalContentPage";
 import { BusinessPortalOverviewPage } from "@/businessPortal/pages/BusinessPortalOverviewPage";
 import { BusinessPortalProfilePage } from "@/businessPortal/pages/BusinessPortalProfilePage";
 import { BusinessPortalTeamPage } from "@/businessPortal/pages/BusinessPortalTeamPage";
@@ -59,6 +60,7 @@ export default function App() {
         >
           <Route element={<BusinessPortalLayout />}>
             <Route index element={<BusinessPortalOverviewPage />} />
+            <Route path="content" element={<BusinessPortalContentPage />} />
             <Route path="profile" element={<BusinessPortalProfilePage />} />
             <Route path="team" element={<BusinessPortalTeamPage />} />
             <Route path="billing" element={<BusinessPortalBillingPage />} />

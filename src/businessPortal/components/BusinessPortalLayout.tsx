@@ -1,4 +1,4 @@
-import { Building2, CreditCard, LayoutGrid, LogOut, ShieldCheck, Users2 } from "lucide-react";
+import { Building2, CreditCard, LayoutGrid, LogOut, Megaphone, ShieldCheck, Users2 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
@@ -7,6 +7,7 @@ import { useBusinessPortalSession } from "../lib/session";
 
 const businessPortalNav = [
   { label: "Overview", href: routes.businessPortal, icon: LayoutGrid },
+  { label: "Content", href: routes.businessPortalContent, icon: Megaphone },
   { label: "Business", href: routes.businessPortalProfile, icon: Building2 },
   { label: "Team", href: routes.businessPortalTeam, icon: Users2 },
   { label: "Billing", href: routes.businessPortalBilling, icon: CreditCard },
@@ -40,7 +41,7 @@ export function BusinessPortalLayout() {
                 <p className="mt-4 text-sm leading-7 text-white/60">
                   {isSupabaseMode
                     ? `${user.fullName} is signed into this live business workspace.`
-                    : `${user.fullName} is the workspace owner for this Phase 1 preview.`}
+                    : `${user.fullName} is browsing the sample business workspace.`}
                 </p>
               </div>
 

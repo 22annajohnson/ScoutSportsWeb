@@ -1,4 +1,4 @@
-import { Activity, BadgeAlert, Building2, CreditCard, Users2 } from "lucide-react";
+import { Activity, BadgeAlert, Building2, CreditCard, Megaphone, Users2 } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { BusinessPortalPageHeader } from "../components/BusinessPortalPageHeader";
 import { useBusinessPortalSession } from "../lib/session";
@@ -8,6 +8,7 @@ const activityIcons = {
   team: Users2,
   profile: Building2,
   verification: BadgeAlert,
+  content: Megaphone,
 };
 
 export function BusinessPortalActivityPage() {
@@ -18,7 +19,7 @@ export function BusinessPortalActivityPage() {
       <BusinessPortalPageHeader
         eyebrow="Activity log"
         title="Recent account and workspace changes."
-        description="This timeline acts as the first audit-style surface for the business portal. It is where business owners should be able to review who changed billing, profile, verification, and team-access settings."
+        description="This timeline acts as the first audit-style surface for the business portal. It is where business owners should be able to review who changed billing, profile, content, verification, and team-access settings."
       />
 
       <GlassCard className="p-7">
@@ -27,7 +28,7 @@ export function BusinessPortalActivityPage() {
             <Activity className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-white/45">Audit preview</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/45">Activity log</p>
             <h3 className="mt-1 font-display text-3xl font-black text-white">Latest workspace events</h3>
           </div>
         </div>

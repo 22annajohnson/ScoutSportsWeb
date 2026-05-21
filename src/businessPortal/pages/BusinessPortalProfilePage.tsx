@@ -6,7 +6,8 @@ import { useBusinessPortalSession } from "../lib/session";
 import { type BusinessPortalProfileDraft } from "../lib/mockBusinessPortal";
 
 export function BusinessPortalProfilePage() {
-  const { business, currentRole, permissions, resetBusinessProfile, saveBusinessProfile } = useBusinessPortalSession();
+  const { business, currentRole, isSupabaseMode, permissions, resetBusinessProfile, saveBusinessProfile } =
+    useBusinessPortalSession();
   const [formState, setFormState] = useState<BusinessPortalProfileDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -109,7 +110,7 @@ export function BusinessPortalProfilePage() {
         website: formState.website.trim(),
         description: formState.description.trim(),
       });
-      setSaveMessage("Business profile saved. This preview is now synced across the portal.");
+      setSaveMessage("Business profile saved across the workspace.");
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong while saving the business profile. Please try again.");
@@ -120,7 +121,7 @@ export function BusinessPortalProfilePage() {
 
   function handleReset() {
     resetBusinessProfile();
-    setSaveMessage("Business profile reset to the demo workspace defaults.");
+    setSaveMessage("Business profile reset to the sample workspace defaults.");
     setErrorMessage("");
   }
 
@@ -129,7 +130,7 @@ export function BusinessPortalProfilePage() {
       <BusinessPortalPageHeader
         eyebrow="Business settings"
         title="Business identity and verification details."
-        description="This is the Phase 1 source of truth for how the business appears in the portal and what information is available for verification, billing, and future publishing workflows."
+        description="Manage the business details teammates rely on across the workspace, including contact information, verification context, and public-facing identity."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
             {permissions.canManageProfile ? (hasUnsavedChanges ? "Unsaved changes" : "All changes saved") : "Read only"}
@@ -151,8 +152,8 @@ export function BusinessPortalProfilePage() {
             />
           </div>
           <p className="mt-4 text-sm leading-7 text-white/65">
-            Completion here will later feed onboarding progress, review readiness, and how confidently the platform can
-            open up spend-based features.
+            Completion reflects how ready this workspace is for onboarding, review, and the business-facing tools that
+            depend on accurate identity details.
           </p>
 
           <div className="mt-6 grid gap-3">
@@ -236,8 +237,8 @@ export function BusinessPortalProfilePage() {
 
             <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
               <p className="text-sm leading-7 text-white/65">
-                In a backend pass, this form should save to a business profile record, generate audit events, and
-                submit verification-sensitive changes into an approval workflow instead of applying them immediately.
+                Keep this record current so billing, invitations, verification, and future customer-facing surfaces all
+                pull from the same source of truth.
               </p>
             </div>
 
@@ -248,10 +249,12 @@ export function BusinessPortalProfilePage() {
               <button type="submit" disabled={!permissions.canManageProfile || isSaving} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
                 {permissions.canManageProfile ? (isSaving ? "Saving..." : "Save business profile") : "Business settings are read only"}
               </button>
-              <button type="button" disabled={!permissions.canManageProfile} onClick={handleReset} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50">
-                <RotateCcw className="h-4 w-4" />
-                Reset demo data
-              </button>
+              {!isSupabaseMode ? (
+                <button type="button" disabled={!permissions.canManageProfile} onClick={handleReset} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50">
+                  <RotateCcw className="h-4 w-4" />
+                  Reset sample data
+                </button>
+              ) : null}
             </div>
           </form>
         </GlassCard>

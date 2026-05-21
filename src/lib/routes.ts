@@ -14,6 +14,7 @@ export const routes = {
   portalHistory: "/portal/history",
   portalSettings: "/portal/settings",
   businessPortal: "/business-portal",
+  businessPortalContent: "/business-portal/content",
   businessPortalProfile: "/business-portal/profile",
   businessPortalTeam: "/business-portal/team",
   businessPortalBilling: "/business-portal/billing",

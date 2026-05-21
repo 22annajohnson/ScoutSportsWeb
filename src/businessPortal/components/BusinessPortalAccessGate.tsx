@@ -177,8 +177,8 @@ export function BusinessPortalAccessGate() {
                   </span>
                 </h1>
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/70">
-                  This business portal is separate from the player membership portal and focuses on business settings,
-                  team roles, billing visibility, and audit-style activity before ads and analytics arrive.
+                  This workspace is separate from the player membership portal and gives businesses one place to manage
+                  profile details, team access, billing, and launch content.
                 </p>
               </div>
               <div className="flex flex-wrap gap-4">
@@ -187,7 +187,7 @@ export function BusinessPortalAccessGate() {
                   onClick={signInAsDemo}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95"
                 >
-                  Enter business demo
+                  Open sample workspace
                   <Sparkles className="h-4 w-4" />
                 </button>
                 <Button href={routes.business} variant="secondary" className="px-6 py-4">
@@ -203,13 +203,14 @@ export function BusinessPortalAccessGate() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-emerald-200">
                     <Building2 className="h-6 w-6" />
                   </div>
-                  <p className="mt-6 text-sm uppercase tracking-[0.3em] text-white/45">What Phase 1 covers</p>
+                  <p className="mt-6 text-sm uppercase tracking-[0.3em] text-white/45">What this workspace covers</p>
                   <div className="mt-6 grid gap-4">
                     {[
-                      "Business account shell with owner context and verification status",
+                      "Business account setup with owner context and verification status",
                       "Team roles, invite flow, and access pause controls",
-                      "Billing settings, payment visibility, and invoice history preview",
-                      "A foundation activity log for sensitive account actions",
+                      "Billing settings, payment visibility, and invoice history",
+                      "Content planning with draft, schedule, publish, and media support",
+                      "An activity log for sensitive account and workspace actions",
                     ].map((item) => (
                       <div key={item} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-white/75">
                         {item}
@@ -218,7 +219,8 @@ export function BusinessPortalAccessGate() {
                   </div>
                   <div className="mt-6 flex items-center gap-3 rounded-2xl border border-amber-300/15 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
                     <ShieldCheck className="h-4 w-4 shrink-0" />
-                    Demo mode is still available, but you can also sign in with Supabase below.
+                    Demo mode is still available for local checks, but real businesses should enter through the login
+                    flow below.
                   </div>
                 </div>
               </GlassCard>

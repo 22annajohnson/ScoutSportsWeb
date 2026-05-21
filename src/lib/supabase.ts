@@ -154,6 +154,35 @@ export type BusinessAuditLogRecord = {
   created_at: string;
 };
 
+export type BusinessContentPostRecord = {
+  id: string;
+  business_id: string;
+  title: string;
+  summary: string | null;
+  body: string;
+  status: "draft" | "scheduled" | "published" | "archived";
+  content_type: "announcement" | "offer" | "event";
+  cta_label: string | null;
+  cta_url: string | null;
+  publish_at: string | null;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BusinessMediaAssetRecord = {
+  id: string;
+  business_id: string;
+  content_post_id: string;
+  label: string | null;
+  kind: "image" | "video";
+  url: string;
+  alt_text: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type BusinessInviteEmailResult = {
   success: boolean;
   provider: string;
@@ -712,6 +741,160 @@ export async function appendBusinessAuditLog(input: {
   if (error) {
     throw toAppError(error);
   }
+}
+
+export async function fetchBusinessContentPosts(businessId: string) {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("business_content_posts")
+    .select(
+      "id, business_id, title, summary, body, status, content_type, cta_label, cta_url, publish_at, published_at, created_at, updated_at, business_media_assets(id, business_id, content_post_id, label, kind, url, alt_text, sort_order, created_at, updated_at)",
+    )
+    .eq("business_id", businessId)
+    .order("updated_at", { ascending: false })
+    .returns<(BusinessContentPostRecord & { business_media_assets?: BusinessMediaAssetRecord[] | null })[]>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data ?? [];
+}
+
+export async function createBusinessContentPost(input: {
+  businessId: string;
+  title: string;
+  summary: string;
+  body: string;
+  status: "draft" | "scheduled" | "published" | "archived";
+  contentType: "announcement" | "offer" | "event";
+  ctaLabel: string;
+  ctaUrl: string;
+  publishAt: string | null;
+  attachments: Array<{
+    label: string;
+    kind: "image" | "video";
+    url: string;
+    altText: string;
+  }>;
+}) {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("business_content_posts")
+    .insert({
+      business_id: input.businessId,
+      title: input.title,
+      summary: input.summary || null,
+      body: input.body,
+      status: input.status,
+      content_type: input.contentType,
+      cta_label: input.ctaLabel || null,
+      cta_url: input.ctaUrl || null,
+      publish_at: input.publishAt,
+      published_at: input.status === "published" ? input.publishAt ?? new Date().toISOString() : null,
+    })
+    .select(
+      "id, business_id, title, summary, body, status, content_type, cta_label, cta_url, publish_at, published_at, created_at, updated_at",
+    )
+    .single<BusinessContentPostRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  if (input.attachments.length > 0) {
+    const { error: assetError } = await client.from("business_media_assets").insert(
+      input.attachments.map((attachment, index) => ({
+        business_id: input.businessId,
+        content_post_id: data.id,
+        label: attachment.label || null,
+        kind: attachment.kind,
+        url: attachment.url,
+        alt_text: attachment.altText || null,
+        sort_order: index,
+      })),
+    );
+
+    if (assetError) {
+      throw toAppError(assetError);
+    }
+  }
+
+  return data;
+}
+
+export async function updateBusinessContentPost(input: {
+  contentId: string;
+  businessId: string;
+  title: string;
+  summary: string;
+  body: string;
+  status: "draft" | "scheduled" | "published" | "archived";
+  contentType: "announcement" | "offer" | "event";
+  ctaLabel: string;
+  ctaUrl: string;
+  publishAt: string | null;
+  attachments: Array<{
+    label: string;
+    kind: "image" | "video";
+    url: string;
+    altText: string;
+  }>;
+}) {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("business_content_posts")
+    .update({
+      title: input.title,
+      summary: input.summary || null,
+      body: input.body,
+      status: input.status,
+      content_type: input.contentType,
+      cta_label: input.ctaLabel || null,
+      cta_url: input.ctaUrl || null,
+      publish_at: input.publishAt,
+      published_at: input.status === "published" ? input.publishAt ?? new Date().toISOString() : null,
+    })
+    .eq("id", input.contentId)
+    .eq("business_id", input.businessId)
+    .select(
+      "id, business_id, title, summary, body, status, content_type, cta_label, cta_url, publish_at, published_at, created_at, updated_at",
+    )
+    .single<BusinessContentPostRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  const { error: deleteAssetError } = await client
+    .from("business_media_assets")
+    .delete()
+    .eq("content_post_id", input.contentId)
+    .eq("business_id", input.businessId);
+
+  if (deleteAssetError) {
+    throw toAppError(deleteAssetError);
+  }
+
+  if (input.attachments.length > 0) {
+    const { error: insertAssetError } = await client.from("business_media_assets").insert(
+      input.attachments.map((attachment, index) => ({
+        business_id: input.businessId,
+        content_post_id: input.contentId,
+        label: attachment.label || null,
+        kind: attachment.kind,
+        url: attachment.url,
+        alt_text: attachment.altText || null,
+        sort_order: index,
+      })),
+    );
+
+    if (insertAssetError) {
+      throw toAppError(insertAssetError);
+    }
+  }
+
+  return data;
 }
 
 export async function sendBusinessInvitationEmail(input: {
