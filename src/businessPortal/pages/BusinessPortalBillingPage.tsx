@@ -68,7 +68,7 @@ export function BusinessPortalBillingPage() {
         spendCapLabel: formState.spendCapLabel.trim(),
       });
       setSaveMessage(
-        isSupabaseMode ? "Billing settings saved for the live workspace." : "Billing settings saved for the demo workspace.",
+        isSupabaseMode ? "Billing settings saved for the live workspace." : "Billing settings saved for the sample workspace.",
       );
     } catch (error) {
       console.error(error);
@@ -83,7 +83,7 @@ export function BusinessPortalBillingPage() {
       <BusinessPortalPageHeader
         eyebrow="Billing"
         title="Billing controls and spend readiness."
-        description="Phase 1 gives business owners one place to review plan state, payment details, budget guardrails, and recent invoices before a real billing provider is wired in."
+        description="Review plan state, payment details, budget guardrails, and invoice history from one billing workspace."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
             {permissions.canManageBilling ? (hasUnsavedChanges ? "Unsaved changes" : "All changes saved") : "Read only"}
@@ -177,9 +177,8 @@ export function BusinessPortalBillingPage() {
 
               <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                 <p className="text-sm leading-7 text-white/65">
-                  A real integration should make Stripe or another provider the source of truth for subscription state,
-                  invoices, payment methods, retries, and renewal timing. This page is the front-end contract for that
-                  future system.
+                  Keep these billing details current so finance, approvals, and teammate visibility all reference the
+                  same business record.
                 </p>
               </div>
 
@@ -198,17 +197,17 @@ export function BusinessPortalBillingPage() {
             {
               icon: ShieldCheck,
               title: "Spend guardrails",
-              text: "The portal should ultimately control who can increase budget caps, approve payment changes, and enable new billable features.",
+              text: "Use this page to track who can change budget caps, payment details, and spend-facing business settings.",
             },
             {
               icon: WalletCards,
-              title: "Provider-owned state",
-              text: "Plan transitions, retry logic, invoices, and subscription lifecycle events should come from the billing provider, not from local form state.",
+              title: "Billing visibility",
+              text: "Plan state, payment method labeling, and billing contact information now live in one place for the business team.",
             },
             {
               icon: ReceiptText,
-              title: "Invoice history preview",
-              text: "This list is shaped to become the normalized invoice timeline once the backend is connected.",
+              title: "Invoice history",
+              text: "Use invoice history to give owners and billing admins a single reference point for past charges.",
             },
           ].map((item) => {
             const Icon = item.icon;

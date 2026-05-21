@@ -103,7 +103,7 @@ export function BusinessPortalTeamPage() {
       <BusinessPortalPageHeader
         eyebrow="Team access"
         title="Roles, invites, and workspace permissions."
-        description="Phase 1 focuses on the account-level controls businesses need first: who can get in, what role they hold, and whether access is active, pending, or paused."
+        description="Control who can access the workspace, what they can do, and whether their access is active, pending, or paused."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
             {teamSummary.active} active • {teamSummary.invited} invited • {teamSummary.paused} paused

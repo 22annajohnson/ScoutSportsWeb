@@ -3,9 +3,11 @@ import type { User } from "@supabase/supabase-js";
 import {
   acceptBusinessInvitation,
   appendBusinessAuditLog,
+  createBusinessContentPost,
   createBusinessInvitation,
   createBusinessWorkspace,
   fetchActiveBusinessMemberships,
+  fetchBusinessContentPosts,
   fetchBusinessWorkspace,
   getAppOrigin,
   getPreferredUserLabel,
@@ -14,12 +16,15 @@ import {
   onSupabaseAuthStateChange,
   sendBusinessInvitationEmail,
   signOutSupabase,
+  updateBusinessContentPost,
   updateBusinessInvitation,
   updateBusinessMembership,
   updateBusinessWorkspace,
   upsertBusinessBillingProfile,
   type BusinessAuditLogRecord,
   type BusinessBillingProfileRecord,
+  type BusinessMediaAssetRecord,
+  type BusinessContentPostRecord,
   type BusinessInvoiceRecord,
   type BusinessInvitationRecord,
   type BusinessMembershipRecord,
@@ -28,6 +33,7 @@ import {
 import {
   businessPortalActivitySeed,
   businessPortalBillingSeed,
+  businessPortalContentSeed,
   businessPortalInvoicesSeed,
   businessPortalOwner,
   businessPortalProfileDraftSeed,
@@ -35,6 +41,11 @@ import {
   getBusinessPortalSnapshot,
   type BusinessPortalActivityItem,
   type BusinessPortalBillingSettings,
+  type BusinessPortalMediaAsset,
+  type BusinessPortalContentItem,
+  type BusinessContentMediaKind,
+  type BusinessContentStatus,
+  type BusinessContentType,
   type BusinessPortalProfileDraft,
   type BusinessPortalWorkspaceMember,
   type BusinessTeamMemberRole,
@@ -44,6 +55,7 @@ import {
 const STORAGE_KEY = "scout.businessPortal.demoSession";
 const BUSINESS_STORAGE_KEY = "scout.businessPortal.profileDraft";
 const BILLING_STORAGE_KEY = "scout.businessPortal.billing";
+const CONTENT_STORAGE_KEY = "scout.businessPortal.content";
 const TEAM_STORAGE_KEY = "scout.businessPortal.team";
 
 type WorkspaceIdentity = typeof businessPortalOwner & {
@@ -56,6 +68,20 @@ type BusinessPortalPermissions = {
   canManageProfile: boolean;
   canManageTeam: boolean;
   canManageBilling: boolean;
+  canManageContent: boolean;
+};
+
+type BusinessPortalContentItemDraft = {
+  id?: string;
+  title: string;
+  summary: string;
+  body: string;
+  status: BusinessContentStatus;
+  type: BusinessContentType;
+  ctaLabel: string;
+  ctaUrl: string;
+  publishAt: string;
+  attachments: BusinessPortalMediaAsset[];
 };
 
 type BusinessPortalSessionContextValue = {
@@ -71,12 +97,14 @@ type BusinessPortalSessionContextValue = {
   user: WorkspaceIdentity | null;
   business: ReturnType<typeof getBusinessPortalSnapshot> | null;
   billing: BusinessPortalBillingSettings | null;
+  content: BusinessPortalContentItem[];
   team: BusinessPortalWorkspaceMember[];
   invoices: typeof businessPortalInvoicesSeed;
   activity: BusinessPortalActivityItem[];
   saveBusinessProfile: (nextProfile: BusinessPortalProfileDraft) => Promise<void>;
   resetBusinessProfile: () => void;
   saveBillingSettings: (nextBilling: BusinessPortalBillingSettings) => Promise<void>;
+  saveContentItem: (input: BusinessPortalContentItemDraft) => Promise<void>;
   inviteTeamMember: (input: {
     name: string;
     email: string;
@@ -96,6 +124,7 @@ const ownerPermissions: BusinessPortalPermissions = {
   canManageProfile: true,
   canManageTeam: true,
   canManageBilling: true,
+  canManageContent: true,
 };
 
 function getInitials(value: string) {
@@ -288,10 +317,115 @@ function mapActivity(logs: BusinessAuditLogRecord[], currentUser: User | null) {
         ? "billing"
         : log.entity_type === "membership"
           ? "team"
+          : log.entity_type === "content"
+            ? "content"
           : log.entity_type === "verification"
             ? "verification"
             : "profile",
   })) satisfies BusinessPortalActivityItem[];
+}
+
+function titleCaseContentStatus(status: BusinessContentPostRecord["status"]): BusinessContentStatus {
+  switch (status) {
+    case "draft":
+      return "Draft";
+    case "scheduled":
+      return "Scheduled";
+    case "published":
+      return "Published";
+    case "archived":
+      return "Archived";
+  }
+}
+
+function titleCaseContentType(type: BusinessContentPostRecord["content_type"]): BusinessContentType {
+  switch (type) {
+    case "announcement":
+      return "Announcement";
+    case "offer":
+      return "Offer";
+    case "event":
+      return "Event";
+  }
+}
+
+function titleCaseContentKind(kind: BusinessMediaAssetRecord["kind"]): BusinessContentMediaKind {
+  switch (kind) {
+    case "image":
+      return "Image";
+    case "video":
+      return "Video";
+  }
+}
+
+function dbContentStatus(status: BusinessContentStatus): BusinessContentPostRecord["status"] {
+  switch (status) {
+    case "Draft":
+      return "draft";
+    case "Scheduled":
+      return "scheduled";
+    case "Published":
+      return "published";
+    case "Archived":
+      return "archived";
+  }
+}
+
+function dbContentType(type: BusinessContentType): BusinessContentPostRecord["content_type"] {
+  switch (type) {
+    case "Announcement":
+      return "announcement";
+    case "Offer":
+      return "offer";
+    case "Event":
+      return "event";
+  }
+}
+
+function dbContentKind(kind: BusinessContentMediaKind): BusinessMediaAssetRecord["kind"] {
+  switch (kind) {
+    case "Image":
+      return "image";
+    case "Video":
+      return "video";
+  }
+}
+
+function formatContentUpdatedLabel(dateString: string) {
+  return `Updated ${new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(dateString))}`;
+}
+
+function mapContentPosts(posts: Array<BusinessContentPostRecord & { business_media_assets?: BusinessMediaAssetRecord[] | null }>) {
+  return posts.map((post) => ({
+    id: post.id,
+    title: post.title,
+    summary: post.summary ?? "",
+    body: post.body,
+    status: titleCaseContentStatus(post.status),
+    type: titleCaseContentType(post.content_type),
+    ctaLabel: post.cta_label ?? "",
+    ctaUrl: post.cta_url ?? "",
+    publishAt: post.publish_at ?? "",
+    attachments: (post.business_media_assets ?? [])
+      .sort((left, right) => left.sort_order - right.sort_order)
+      .map((asset) => ({
+        id: asset.id,
+        label: asset.label ?? "",
+        kind: titleCaseContentKind(asset.kind),
+        url: asset.url,
+        altText: asset.alt_text ?? "",
+      })),
+    updatedAtLabel:
+      post.status === "published" && post.published_at
+        ? `Published ${new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+          }).format(new Date(post.published_at))}`
+        : formatContentUpdatedLabel(post.updated_at),
+  })) satisfies BusinessPortalContentItem[];
 }
 
 function parseBudgetLabel(value: string) {
@@ -327,6 +461,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
   const [currentRole, setCurrentRole] = useState<BusinessTeamMemberRole | null>(null);
   const [businessDraft, setBusinessDraft] = useState<BusinessPortalProfileDraft>(businessPortalProfileDraftSeed);
   const [billingState, setBillingState] = useState<BusinessPortalBillingSettings>(businessPortalBillingSeed);
+  const [contentState, setContentState] = useState<BusinessPortalContentItem[]>(businessPortalContentSeed);
   const [teamState, setTeamState] = useState<BusinessPortalWorkspaceMember[]>(businessPortalTeamSeed);
   const [invoiceState, setInvoiceState] = useState<typeof businessPortalInvoicesSeed>(businessPortalInvoicesSeed);
   const [activityState, setActivityState] = useState<BusinessPortalActivityItem[]>(businessPortalActivitySeed);
@@ -346,6 +481,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         billingContactEmail: user.email ?? businessPortalBillingSeed.billingContactEmail,
       });
       setCurrentRole(null);
+      setContentState([]);
       setTeamState([]);
       setInvoiceState([]);
       setActivityState([]);
@@ -355,6 +491,12 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
     const membership =
       (targetBusinessId ? memberships.find((item) => item.business_id === targetBusinessId) : null) ?? memberships[0];
     const workspace = await fetchBusinessWorkspace(membership.business_id);
+    let contentPosts: BusinessPortalContentItem[] = [];
+    try {
+      contentPosts = mapContentPosts(await fetchBusinessContentPosts(membership.business_id));
+    } catch (error) {
+      console.warn("Business content posts are not available yet.", error);
+    }
     const nextDraft = deriveBusinessDraft(workspace.business);
     const nextRole = titleCaseRole(membership.role);
 
@@ -363,6 +505,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
     setCurrentRole(nextRole);
     setBusinessDraft(nextDraft);
     setBillingState(mapBillingProfile(workspace.billing, user.email ?? nextDraft.supportEmail));
+    setContentState(contentPosts);
     setTeamState([...mapInvitations(workspace.invitations), ...mapMemberships(workspace.team, user)]);
     setInvoiceState(mapInvoices(workspace.invoices));
     setActivityState(mapActivity(workspace.activity, user));
@@ -372,6 +515,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
     const storedValue = window.localStorage.getItem(STORAGE_KEY);
     const storedBusiness = window.localStorage.getItem(BUSINESS_STORAGE_KEY);
     const storedBilling = window.localStorage.getItem(BILLING_STORAGE_KEY);
+    const storedContent = window.localStorage.getItem(CONTENT_STORAGE_KEY);
     const storedTeam = window.localStorage.getItem(TEAM_STORAGE_KEY);
 
     if (storedBusiness) {
@@ -387,6 +531,14 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         setBillingState(JSON.parse(storedBilling) as BusinessPortalBillingSettings);
       } catch (error) {
         console.error("Unable to parse stored billing settings", error);
+      }
+    }
+
+    if (storedContent) {
+      try {
+        setContentState(JSON.parse(storedContent) as BusinessPortalContentItem[]);
+      } catch (error) {
+        console.error("Unable to parse stored content items", error);
       }
     }
 
@@ -472,10 +624,10 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
           : currentRole === "Owner"
             ? ownerPermissions
             : currentRole === "Manager"
-              ? { canManageProfile: true, canManageTeam: true, canManageBilling: false }
+              ? { canManageProfile: true, canManageTeam: true, canManageBilling: false, canManageContent: true }
               : currentRole === "Billing Admin"
-                ? { canManageProfile: false, canManageTeam: false, canManageBilling: true }
-                : { canManageProfile: false, canManageTeam: false, canManageBilling: false },
+                ? { canManageProfile: false, canManageTeam: false, canManageBilling: true, canManageContent: false }
+                : { canManageProfile: false, canManageTeam: false, canManageBilling: false, canManageContent: false },
       user: isAuthenticated
         ? getWorkspaceIdentity(
             businessDraft,
@@ -485,6 +637,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         : null,
       business: isAuthenticated ? getBusinessPortalSnapshot(businessDraft) : null,
       billing: isAuthenticated ? billingState : null,
+      content: isAuthenticated ? contentState : [],
       team: isAuthenticated ? teamState : [],
       invoices: isAuthenticated ? invoiceState : [],
       activity: isAuthenticated ? activityState : [],
@@ -546,6 +699,87 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
 
         setBillingState(nextBilling);
         window.localStorage.setItem(BILLING_STORAGE_KEY, JSON.stringify(nextBilling));
+      },
+      saveContentItem: async (input) => {
+        if (isSupabaseMode && businessId) {
+          const savedPost = input.id
+            ? await updateBusinessContentPost({
+                contentId: input.id,
+                businessId,
+                title: input.title.trim(),
+                summary: input.summary.trim(),
+                body: input.body.trim(),
+                status: dbContentStatus(input.status),
+                contentType: dbContentType(input.type),
+                ctaLabel: input.ctaLabel.trim(),
+                ctaUrl: input.ctaUrl.trim(),
+                publishAt: input.publishAt || null,
+                attachments: input.attachments.map((attachment) => ({
+                  label: attachment.label.trim(),
+                  kind: dbContentKind(attachment.kind),
+                  url: attachment.url.trim(),
+                  altText: attachment.altText.trim(),
+                })),
+              })
+            : await createBusinessContentPost({
+                businessId,
+                title: input.title.trim(),
+                summary: input.summary.trim(),
+                body: input.body.trim(),
+                status: dbContentStatus(input.status),
+                contentType: dbContentType(input.type),
+                ctaLabel: input.ctaLabel.trim(),
+                ctaUrl: input.ctaUrl.trim(),
+                publishAt: input.publishAt || null,
+                attachments: input.attachments.map((attachment) => ({
+                  label: attachment.label.trim(),
+                  kind: dbContentKind(attachment.kind),
+                  url: attachment.url.trim(),
+                  altText: attachment.altText.trim(),
+                })),
+              });
+
+          await captureAuditEvent({
+            businessId,
+            entityType: "content",
+            entityId: savedPost.id,
+            action: input.id ? "business_content_updated" : "business_content_created",
+            detail: `${input.id ? "Updated" : "Created"} the ${input.type.toLowerCase()} "${input.title.trim()}".`,
+          });
+
+          if (supabaseUser) {
+            await refreshWorkspace(supabaseUser, businessId);
+          }
+          return;
+        }
+
+        setContentState((current) => {
+          const nextItem: BusinessPortalContentItem = {
+            id: input.id ?? `content-${Date.now()}`,
+            title: input.title.trim(),
+            summary: input.summary.trim(),
+            body: input.body.trim(),
+            status: input.status,
+            type: input.type,
+            ctaLabel: input.ctaLabel.trim(),
+            ctaUrl: input.ctaUrl.trim(),
+            publishAt: input.publishAt,
+            attachments: input.attachments,
+            updatedAtLabel:
+              input.status === "Published"
+                ? `Published ${new Intl.DateTimeFormat("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  }).format(new Date())}`
+                : "Edited just now",
+          };
+
+          const next = current.some((item) => item.id === nextItem.id)
+            ? current.map((item) => (item.id === nextItem.id ? nextItem : item))
+            : [nextItem, ...current];
+          window.localStorage.setItem(CONTENT_STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
       },
       inviteTeamMember: async ({ name, email, role }) => {
         if (isSupabaseMode && businessId && supabaseUser) {
@@ -814,6 +1048,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
       billingState,
       businessDraft,
       businessId,
+      contentState,
       currentRole,
       invoiceState,
       isAcceptingInvitation,

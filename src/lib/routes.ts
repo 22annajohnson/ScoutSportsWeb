@@ -13,6 +13,7 @@ export const routes = {
   portalStats: "/portal/stats",
   portalHistory: "/portal/history",
   businessPortal: "/business-portal",
+  businessPortalContent: "/business-portal/content",
   businessPortalProfile: "/business-portal/profile",
   businessPortalTeam: "/business-portal/team",
   businessPortalBilling: "/business-portal/billing",

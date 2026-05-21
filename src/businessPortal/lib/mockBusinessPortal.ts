@@ -3,6 +3,9 @@ export type BusinessVerificationStatus = "Verified" | "Under review" | "Needs do
 export type BusinessTeamMemberRole = "Owner" | "Manager" | "Analyst" | "Billing Admin";
 export type BusinessTeamMemberStatus = "Active" | "Invited" | "Paused";
 export type BusinessInvoiceStatus = "Paid" | "Pending" | "Action required";
+export type BusinessContentStatus = "Draft" | "Scheduled" | "Published" | "Archived";
+export type BusinessContentType = "Announcement" | "Offer" | "Event";
+export type BusinessContentMediaKind = "Image" | "Video";
 
 export type BusinessPortalProfileSnapshot = {
   displayName: string;
@@ -60,7 +63,29 @@ export type BusinessPortalActivityItem = {
   actor: string;
   dateLabel: string;
   detail: string;
-  type: "billing" | "team" | "profile" | "verification";
+  type: "billing" | "team" | "profile" | "verification" | "content";
+};
+
+export type BusinessPortalContentItem = {
+  id: string;
+  title: string;
+  summary: string;
+  body: string;
+  status: BusinessContentStatus;
+  type: BusinessContentType;
+  ctaLabel: string;
+  ctaUrl: string;
+  publishAt: string;
+  updatedAtLabel: string;
+  attachments: BusinessPortalMediaAsset[];
+};
+
+export type BusinessPortalMediaAsset = {
+  id: string;
+  label: string;
+  kind: BusinessContentMediaKind;
+  url: string;
+  altText: string;
 };
 
 export const businessPortalOwner = {
@@ -214,6 +239,75 @@ export const businessPortalActivitySeed: BusinessPortalActivityItem[] = [
     dateLabel: "April 21, 2026",
     detail: "Refined the public description to better position Harbor Fit classes and social leagues.",
     type: "profile",
+  },
+  {
+    id: "activity-5",
+    title: "Offer scheduled for next week",
+    actor: "Jared Ellis",
+    dateLabel: "April 20, 2026",
+    detail: "Queued a two-for-one guest class offer to publish ahead of the new member campaign.",
+    type: "content",
+  },
+];
+
+export const businessPortalContentSeed: BusinessPortalContentItem[] = [
+  {
+    id: "content-1",
+    title: "Spring league registration now open",
+    summary: "Announce that weekend league signups are available through May 12.",
+    body:
+      "Registration is now open for our spring social league. Reserve your spot before May 12 and join us for six weeks of community matches and post-game mixers.",
+    status: "Published",
+    type: "Announcement",
+    ctaLabel: "Register now",
+    ctaUrl: "https://harborfit.co/leagues",
+    publishAt: "2026-05-01T14:00:00.000Z",
+    updatedAtLabel: "Published May 1",
+    attachments: [
+      {
+        id: "asset-1",
+        label: "League launch graphic",
+        kind: "Image",
+        url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
+        altText: "Players high-fiving on an indoor court.",
+      },
+    ],
+  },
+  {
+    id: "content-2",
+    title: "Two-for-one guest class week",
+    summary: "Promote a limited-time guest pass offer for new visitors.",
+    body:
+      "Bring a friend during guest week and both of you can join any evening class on the schedule with a two-for-one pass.",
+    status: "Scheduled",
+    type: "Offer",
+    ctaLabel: "View class schedule",
+    ctaUrl: "https://harborfit.co/schedule",
+    publishAt: "2026-05-08T16:30:00.000Z",
+    updatedAtLabel: "Scheduled for May 8",
+    attachments: [
+      {
+        id: "asset-2",
+        label: "Guest week promo tile",
+        kind: "Image",
+        url: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
+        altText: "Two women smiling during a studio workout.",
+      },
+    ],
+  },
+  {
+    id: "content-3",
+    title: "Member social rooftop meetup",
+    summary: "Draft event copy for the monthly member social.",
+    body:
+      "We are planning a rooftop member social with light bites, recovery demos, and space to meet other regulars in the club community.",
+    status: "Draft",
+    type: "Event",
+    ctaLabel: "RSVP interest",
+    ctaUrl: "https://harborfit.co/events",
+    publishAt: "",
+    updatedAtLabel: "Edited today",
+    attachments: [],
   },
 ];
 

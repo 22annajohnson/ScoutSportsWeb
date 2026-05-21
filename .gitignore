@@ -141,6 +141,9 @@ vite.config.ts.timestamp-*
 # Local-only database setup scripts
 supabase/*.sql
 
+# macOS Finder metadata
+.DS_Store
+
 # Local-only planning documents
 *PLAN*.md
 *plan*.md
