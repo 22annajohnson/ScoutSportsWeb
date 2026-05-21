@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session, User } from "@supabase/supabase-js";
 import { routes } from "@/lib/routes";
 import {
+  fetchPortalBillingProfile,
+  fetchPortalInvoices,
   fetchPortalHistory,
   fetchPortalMembership,
   fetchPortalProfile,
@@ -12,12 +14,16 @@ import {
   upsertPortalProfile,
 } from "@/lib/supabase";
 import {
+  portalBillingProfile,
   getPortalProfileSnapshot,
   portalHistoryPreview,
+  portalInvoiceHistory,
   portalMembership,
   portalPlayer,
   portalProfileDraftSeed,
+  type PortalBillingProfile,
   type PortalHistoryItem,
+  type PortalInvoiceItem,
   portalSportBreakdowns,
   portalStatsSnapshot,
   type PortalMembership,
@@ -219,6 +225,61 @@ function mapHistoryRecords(records: Awaited<ReturnType<typeof fetchPortalHistory
   }));
 }
 
+function mapBillingProfileRecord(record: Awaited<ReturnType<typeof fetchPortalBillingProfile>>): PortalBillingProfile | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    paymentMethod: record.payment_method_label ?? "Payment method not synced yet",
+    billingContactEmail: record.billing_contact_email ?? "No billing contact on file",
+    billingAddress: record.billing_address ?? "Billing address not synced yet",
+    taxStatus: record.tax_status ?? "Tax status unavailable",
+  };
+}
+
+function formatInvoiceDateLabel(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatInvoiceAmount(amountCents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amountCents / 100);
+}
+
+function formatInvoiceStatus(status: "paid" | "pending" | "refunded"): PortalInvoiceItem["status"] {
+  switch (status) {
+    case "pending":
+      return "Pending";
+    case "refunded":
+      return "Refunded";
+    default:
+      return "Paid";
+  }
+}
+
+function mapInvoiceRecords(records: Awaited<ReturnType<typeof fetchPortalInvoices>>): PortalInvoiceItem[] {
+  return records.map((record) => ({
+    id: record.external_invoice_id || record.id,
+    dateLabel: formatInvoiceDateLabel(record.invoiced_at),
+    amountLabel: formatInvoiceAmount(record.amount_cents),
+    status: formatInvoiceStatus(record.status),
+    description: record.description,
+  }));
+}
+
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
@@ -227,13 +288,17 @@ type PortalSessionContextValue = {
   isMembershipRemote: boolean;
   isStatsRemote: boolean;
   isHistoryRemote: boolean;
+  isBillingRemote: boolean;
   isMembershipLoading: boolean;
   isStatsLoading: boolean;
   isHistoryLoading: boolean;
+  isBillingLoading: boolean;
   authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
   membership: PortalMembership | null;
+  billingProfile: PortalBillingProfile | null;
+  invoices: PortalInvoiceItem[];
   stats: PortalStatsSnapshot | null;
   sportBreakdowns: PortalSportBreakdown[];
   history: PortalHistoryItem[];
@@ -259,11 +324,15 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [history, setHistory] = useState<PortalHistoryItem[]>(portalHistoryPreview);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [billingProfile, setBillingProfile] = useState<PortalBillingProfile>(portalBillingProfile);
+  const [invoices, setInvoices] = useState<PortalInvoiceItem[]>(portalInvoiceHistory);
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
   const isProfileRemote = Boolean(authUser);
   const isMembershipRemote = Boolean(authUser);
   const isStatsRemote = Boolean(authUser);
   const isHistoryRemote = Boolean(authUser);
+  const isBillingRemote = Boolean(authUser);
 
   const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
@@ -500,6 +569,52 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     };
   }, [authUser]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setBillingProfile(portalBillingProfile);
+      setInvoices(portalInvoiceHistory);
+      setIsBillingLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsBillingLoading(true);
+
+    async function loadBilling() {
+      try {
+        const [profileRecord, invoiceRecords] = await Promise.all([
+          fetchPortalBillingProfile(currentAuthUser.id),
+          fetchPortalInvoices(currentAuthUser.id),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setBillingProfile(mapBillingProfileRecord(profileRecord) ?? portalBillingProfile);
+        setInvoices(invoiceRecords.length > 0 ? mapInvoiceRecords(invoiceRecords) : portalInvoiceHistory);
+      } catch (error) {
+        console.error("Unable to load remote portal billing", error);
+
+        if (isMounted) {
+          setBillingProfile(portalBillingProfile);
+          setInvoices(portalInvoiceHistory);
+        }
+      } finally {
+        if (isMounted) {
+          setIsBillingLoading(false);
+        }
+      }
+    }
+
+    void loadBilling();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
@@ -509,13 +624,17 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isMembershipRemote,
       isStatsRemote,
       isHistoryRemote,
+      isBillingRemote,
       isMembershipLoading,
       isStatsLoading,
       isHistoryLoading,
+      isBillingLoading,
       authUser,
       player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
       membership: isAuthenticated ? membership : null,
+      billingProfile: isAuthenticated ? billingProfile : null,
+      invoices: isAuthenticated ? invoices : [],
       stats: isAuthenticated ? stats : null,
       sportBreakdowns: isAuthenticated ? sportBreakdowns : [],
       history: isAuthenticated ? history : [],
@@ -587,11 +706,15 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isProfileRemote,
       isHistoryLoading,
       isHistoryRemote,
+      isBillingLoading,
+      isBillingRemote,
       isStatsLoading,
       isStatsRemote,
       isReady,
       isSupabaseAuthEnabled,
+      billingProfile,
       history,
+      invoices,
       membership,
       sportBreakdowns,
       stats,

@@ -68,6 +68,13 @@ export type PortalInvoiceItem = {
   description: string;
 };
 
+export type PortalBillingProfile = {
+  paymentMethod: string;
+  billingContactEmail: string;
+  billingAddress: string;
+  taxStatus: string;
+};
+
 export type PortalSportBreakdown = {
   sport: string;
   rating: number;
@@ -150,6 +157,13 @@ export const portalInvoiceHistory: PortalInvoiceItem[] = [
     description: "Scout Pro monthly start",
   },
 ];
+
+export const portalBillingProfile: PortalBillingProfile = {
+  paymentMethod: "Visa ending in 4242",
+  billingContactEmail: "alyssa@scoutsports.app",
+  billingAddress: "Brooklyn, NY",
+  taxStatus: "No tax information required",
+};
 
 export const portalProfileDraftSeed: PortalProfileDraft = {
   fullName: "Alyssa Carter",
