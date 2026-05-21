@@ -130,7 +130,7 @@ function mapMembershipRecord(record: Awaited<ReturnType<typeof fetchPortalMember
     renewalLabel: formatRenewalLabel(record.renewal_at),
     billingSummary:
       record.sync_note ??
-      "Your membership is now resolving from the account-level portal record instead of preview-only data.",
+      "Your membership is now resolving from the account-level portal record.",
     manageLabel: "Manage membership",
     billingSource: record.billing_source,
     cadence: formatMembershipCadence(record.cadence),

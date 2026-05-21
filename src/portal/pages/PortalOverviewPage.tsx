@@ -21,7 +21,7 @@ export function PortalOverviewPage() {
       <PortalPageHeader
         eyebrow="Account home"
         title={`Welcome back, ${player.firstName}.`}
-        description="This first portal shell is designed to feel like the Scout product on the web. It gives players one place to manage membership, update identity details, and review performance context."
+        description="Your Scout account center keeps membership, profile updates, performance context, and recent activity in one place."
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
             <p className="text-xs uppercase tracking-[0.3em] text-white/45">Membership</p>
@@ -57,8 +57,8 @@ export function PortalOverviewPage() {
         <GlassCard className="p-7">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/45">What ships next</p>
-              <h3 className="mt-3 font-display text-3xl font-black text-white">Portal roadmap in motion.</h3>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/45">Account center</p>
+              <h3 className="mt-3 font-display text-3xl font-black text-white">Everything that matters, one place.</h3>
             </div>
             <ArrowUpRight className="mt-1 h-5 w-5 text-violet-200" />
           </div>
@@ -71,11 +71,11 @@ export function PortalOverviewPage() {
               },
               {
                 title: "Membership and billing",
-                text: "Stripe or another billing source will become the account truth for upgrades made online or in-app.",
+                text: "Membership status, renewal timing, and billing visibility are organized for one clean player account experience.",
               },
               {
                 title: "Stats and history",
-                text: "The portal now has fuller stats and history surfaces, ready to be swapped from preview data to real account-scoped reads.",
+                text: "Performance context and recent matches stay close at hand so players can track momentum without leaving the portal.",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
@@ -87,24 +87,30 @@ export function PortalOverviewPage() {
         </GlassCard>
 
         <GlassCard className="p-7">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/45">Recent activity preview</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/45">Recent activity</p>
           <h3 className="mt-3 font-display text-3xl font-black text-white">Game history snapshot</h3>
           <div className="mt-6 grid gap-4">
-            {history.slice(0, 4).map((item) => (
-              <div key={`${item.title}-${item.dateLabel}`} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-white/55">{item.dateLabel}</p>
-                    <h4 className="mt-1 text-lg font-semibold text-white">{item.title}</h4>
+            {history.length ? (
+              history.slice(0, 4).map((item) => (
+                <div key={`${item.title}-${item.dateLabel}`} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-white/55">{item.dateLabel}</p>
+                      <h4 className="mt-1 text-lg font-semibold text-white">{item.title}</h4>
+                    </div>
+                    <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/80">
+                      {item.result}
+                    </div>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/80">
-                    {item.result}
-                  </div>
+                  <p className="mt-3 text-sm leading-7 text-white/65">{item.detail}</p>
+                  <p className="mt-3 text-sm font-semibold text-violet-200">{item.ratingDelta} rating</p>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-white/65">{item.detail}</p>
-                <p className="mt-3 text-sm font-semibold text-violet-200">{item.ratingDelta} rating</p>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5 text-sm leading-7 text-white/65">
+                Match history will show up here as soon as this player starts logging games through Scout.
               </div>
-            ))}
+            )}
           </div>
           <Button href={routes.portalHistory} variant="secondary" className="mt-6 w-full">
             Open history page

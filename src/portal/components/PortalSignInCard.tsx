@@ -45,8 +45,8 @@ export function PortalSignInCard() {
         <p className="mt-6 text-sm uppercase tracking-[0.3em] text-white/45">Portal access</p>
         <h2 className="mt-3 font-display text-4xl font-black text-white">Enter with your player email.</h2>
         <p className="mt-4 text-base leading-8 text-white/70">
-          This foundation uses Supabase Auth magic links. Real profile, membership, and stats data can attach to this
-          session later without changing the portal shell.
+          Sign in with the email tied to your Scout account to open your player portal with membership, profile, and
+          activity all in one place.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -87,7 +87,7 @@ export function PortalSignInCard() {
         <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
           <p className="text-sm leading-7 text-white/65">
             {isSupabaseAuthEnabled
-              ? "If you just need to review the shell without logging into a real player account, the demo path is still available below."
+              ? "If you only need a quick visual walkthrough, the demo path is still available below."
               : "Supabase Auth is not configured in this environment yet, so only the demo preview is available right now."}
           </p>
         </div>

@@ -3,7 +3,6 @@ import { NavLink, Outlet } from "react-router-dom";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
 import { routes } from "@/lib/routes";
-import { portalMembership } from "../lib/mockPortal";
 import { usePortalSession } from "../lib/session";
 
 const portalNav = [
@@ -16,9 +15,9 @@ const portalNav = [
 ];
 
 export function PortalLayout() {
-  const { authUser, player, signOut } = usePortalSession();
+  const { authUser, membership, player, signOut } = usePortalSession();
 
-  if (!player) {
+  if (!membership || !player) {
     return null;
   }
 
@@ -38,7 +37,7 @@ export function PortalLayout() {
                 <p className="mt-2 text-sm text-white/60">{player.location}</p>
                 <p className="mt-1 text-xs text-white/45">{authUser?.email ?? player.email}</p>
                 <div className="mt-4 inline-flex rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-2 text-sm text-violet-200">
-                  {portalMembership.tier} member
+                  {membership.tier} member
                 </div>
               </div>
 

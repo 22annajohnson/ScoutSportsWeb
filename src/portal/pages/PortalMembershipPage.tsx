@@ -23,20 +23,20 @@ export function PortalMembershipPage() {
         title="Membership and billing visibility."
         description={
           isMembershipRemote && isBillingRemote
-            ? "Your current membership, payment method, and invoice timeline now read from the portal account layer. This keeps the page compatible with future Stripe or app-store sync without tying the UI to one provider."
+            ? "Your current plan, payment method, renewal timing, and invoice timeline all stay visible here in one account view."
             : isMembershipRemote
-              ? "Your current membership record is now loading from the portal account layer. Payment methods and invoices can stay preview-backed until billing sync is fully connected."
-            : "This shell is ready for a third-party billing source such as Stripe. Upgrades made online or in-app should eventually resolve into one normalized membership state here."
+              ? "Your current plan, renewal timing, and membership access all stay visible here in one account view."
+            : "This page keeps membership details organized in one place so players always know their current access."
         }
         aside={
           <div className="rounded-2xl border border-blue-300/20 bg-blue-500/10 px-4 py-4 text-sm text-blue-200">
             {isMembershipLoading || isBillingLoading
               ? "Syncing billing..."
               : isMembershipRemote && isBillingRemote
-                ? "Billing records connected"
+                ? "Billing connected"
                 : isMembershipRemote
-                  ? "Membership record connected"
-                  : "Billing integration planned"}
+                  ? "Membership connected"
+                  : "Membership overview"}
           </div>
         }
       />
@@ -122,14 +122,14 @@ export function PortalMembershipPage() {
               title: isBillingRemote ? "Connected billing profile" : "What a future billing source should own",
               text: isBillingRemote
                 ? `Billing contact: ${billingProfile.billingContactEmail} • Address: ${billingProfile.billingAddress} • Tax status: ${billingProfile.taxStatus}`
-                : "Subscription state, plan changes, invoice generation, renewal timing, payment method, and cancellation status should come from the billing provider rather than marketing-site forms.",
+                : "Renewal timing, payment method, and plan status are organized here so account decisions are easy to make at a glance.",
             },
             {
               icon: ReceiptText,
-              title: isBillingRemote ? "Invoice timeline connected" : "Invoice history preview",
+              title: isBillingRemote ? "Invoice timeline connected" : "Invoice history",
               text: isBillingRemote
                 ? "The invoice list below is now reading from the portal billing layer, so provider sync can update the timeline without changing this front-end contract."
-                : "This page is already designed to hold a real billing timeline once Stripe or another provider is connected, even while current plan state comes from Supabase first.",
+                : "The membership page keeps a clean billing timeline ready for the full account experience.",
             },
           ].map((item) => {
             const Icon = item.icon;

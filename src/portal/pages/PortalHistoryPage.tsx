@@ -34,8 +34,8 @@ export function PortalHistoryPage() {
         title="Recent matches and game results."
         description={
           isHistoryRemote
-            ? "Your recent matches now come from the portal account layer, with filtering, venue context, scorelines, and movement all ready for live history reads."
-            : "This page now supports the structure a real player history needs: filtering, venue detail, score context, and match-by-match movement. The next step is replacing preview items with real account-scoped match records."
+            ? "Your recent matches stay organized here with filtering, venue context, scorelines, and rating movement."
+            : "Your match history stays organized here with filtering, venue context, scorelines, and rating movement."
         }
       />
 
@@ -143,8 +143,7 @@ export function PortalHistoryPage() {
             ))
           ) : (
             <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6 text-sm leading-7 text-white/65">
-              No matches fit the current filters. This empty state is ready for real query-backed history once the
-              portal is connected to account-scoped match data.
+              No matches fit the current filters. Try a broader view to see more of this player's recent activity.
             </div>
           )}
         </div>
