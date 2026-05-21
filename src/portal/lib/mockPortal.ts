@@ -99,7 +99,7 @@ export const portalMembership: PortalMembership = {
   renewalLabel: "Renews May 21, 2026",
   billingSummary: "Monthly plan billed online. In-app upgrades will sync here once billing is unified.",
   manageLabel: "Manage membership",
-  billingSource: "Web billing preview",
+  billingSource: "Web billing",
   cadence: "Monthly",
   priceLabel: "$9.99 / month",
   paymentMethod: "Visa ending in 4242",

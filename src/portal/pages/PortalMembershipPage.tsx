@@ -22,12 +22,12 @@ export function PortalMembershipPage() {
         title="Membership and billing visibility."
         description={
           isMembershipRemote
-            ? "Your current membership record is now loading from the portal account layer. Payment methods and invoices can stay preview-backed until billing sync is fully connected."
-            : "This shell is ready for a third-party billing source such as Stripe. Upgrades made online or in-app should eventually resolve into one normalized membership state here."
+            ? "Your current plan, renewal timing, and membership access all stay visible here in one account view."
+            : "This page keeps membership details organized in one place so players always know their current access."
         }
         aside={
           <div className="rounded-2xl border border-blue-300/20 bg-blue-500/10 px-4 py-4 text-sm text-blue-200">
-            {isMembershipLoading ? "Syncing membership..." : isMembershipRemote ? "Membership record connected" : "Billing integration planned"}
+            {isMembershipLoading ? "Syncing membership..." : isMembershipRemote ? "Membership connected" : "Membership overview"}
           </div>
         }
       />
@@ -110,13 +110,13 @@ export function PortalMembershipPage() {
             },
             {
               icon: WalletCards,
-              title: "What a future billing source should own",
-              text: "Subscription state, plan changes, invoice generation, renewal timing, payment method, and cancellation status should come from the billing provider rather than marketing-site forms.",
+              title: "Billing visibility",
+              text: "Renewal timing, payment method, and plan status are organized here so account decisions are easy to make at a glance.",
             },
             {
               icon: ReceiptText,
-              title: "Invoice history preview",
-              text: "This page is already designed to hold a real billing timeline once Stripe or another provider is connected, even while current plan state comes from Supabase first.",
+              title: "Invoice history",
+              text: "The membership page keeps a clean billing timeline ready for the full account experience.",
             },
           ].map((item) => {
             const Icon = item.icon;

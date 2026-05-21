@@ -18,8 +18,8 @@ export function PortalStatsPage() {
         title="Performance and ranking snapshot."
         description={
           isStatsRemote
-            ? "Your headline performance metrics now read from the portal account layer, while deeper bracket and match-history surfaces can continue moving over in follow-up passes."
-            : "This page is now structured like a real player performance dashboard: headline metrics, sport-level breakdowns, bracket finishes, and momentum framing. The next step is replacing preview data with app-backed reads."
+            ? "Your headline performance metrics are organized here so you can see form, momentum, and sport-by-sport context at a glance."
+            : "This page organizes the performance signals that matter most to an active Scout player."
         }
       />
 

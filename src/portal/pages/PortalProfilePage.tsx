@@ -100,7 +100,7 @@ export function PortalProfilePage() {
       setSaveMessage(
         isProfileRemote
           ? "Profile saved to your account."
-          : "Profile saved. This draft is synced across the portal preview.",
+          : "Profile saved for the demo session.",
       );
     } catch (error) {
       console.error(error);
@@ -118,7 +118,7 @@ export function PortalProfilePage() {
         description={
           isProfileRemote
             ? "This profile is now reading from and saving back to your authenticated portal account."
-            : "This portal pass turns the profile into a real editable flow. In demo mode it still uses local preview data."
+            : "Update the public profile details that shape discovery, matching quality, and how you show up in Scout."
         }
         aside={
           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/70">
@@ -265,8 +265,8 @@ export function PortalProfilePage() {
             <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
               <p className="text-sm leading-7 text-white/65">
                 {isProfileRemote
-                  ? "Authenticated portal sessions now save this profile to Supabase. Membership and stats/history are still preview-backed for now."
-                  : "Demo mode still uses local preview data. Sign in with a real portal account to test account-backed profile reads and writes."}
+                  ? "Authenticated portal sessions save these profile changes back to your player account."
+                  : "Demo mode keeps these changes local to this session. Sign in with a real player account to save them to Scout."}
               </p>
             </div>
 

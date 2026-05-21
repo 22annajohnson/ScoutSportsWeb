@@ -38,8 +38,8 @@ export function PortalAccessGate() {
                   </span>
                 </h1>
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/70">
-                  The portal now has membership, profile, stats, and history surfaces. This layer moves access onto
-                  real Supabase Auth while the underlying portal data stays preview-backed until account reads are wired.
+                  The player portal gives members one place to manage profile details, review membership status, and
+                  stay on top of recent activity with a real sign-in flow.
                 </p>
               </div>
             </div>
