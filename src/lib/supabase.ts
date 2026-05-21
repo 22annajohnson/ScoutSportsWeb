@@ -238,6 +238,41 @@ export type PortalHistoryRecord = {
   updated_at?: string;
 };
 
+export type PortalBillingProfileRecord = {
+  user_id: string;
+  payment_method_label: string | null;
+  billing_contact_email: string | null;
+  billing_address: string | null;
+  tax_status: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalInvoiceRecord = {
+  id: string;
+  user_id: string;
+  external_invoice_id: string | null;
+  amount_cents: number;
+  status: "paid" | "pending" | "refunded";
+  description: string;
+  invoiced_at: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalSettingsPreferencesRecord = {
+  user_id: string;
+  match_alerts_email: boolean;
+  bracket_updates_email: boolean;
+  circle_activity_email: boolean;
+  partner_offers_email: boolean;
+  sms_alerts_enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalSettingsPreferencesUpsert = Omit<PortalSettingsPreferencesRecord, "created_at" | "updated_at">;
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -847,4 +882,67 @@ export async function fetchPortalHistory(userId: string) {
   }
 
   return data;
+}
+
+export async function fetchPortalBillingProfile(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_billing_profiles")
+    .select("user_id, payment_method_label, billing_contact_email, billing_address, tax_status, created_at, updated_at")
+    .eq("user_id", userId)
+    .maybeSingle<PortalBillingProfileRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalInvoices(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_invoices")
+    .select("id, user_id, external_invoice_id, amount_cents, status, description, invoiced_at, created_at, updated_at")
+    .eq("user_id", userId)
+    .order("invoiced_at", { ascending: false })
+    .returns<PortalInvoiceRecord[]>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function fetchPortalSettingsPreferences(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_settings_preferences")
+    .select(
+      "user_id, match_alerts_email, bracket_updates_email, circle_activity_email, partner_offers_email, sms_alerts_enabled, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalSettingsPreferencesRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function upsertPortalSettingsPreferences(payload: PortalSettingsPreferencesUpsert) {
+  const client = requireSupabase();
+
+  const { error } = await client.from("player_portal_settings_preferences").upsert(payload, {
+    onConflict: "user_id",
+  });
+
+  if (error) {
+    throw toAppError(error);
+  }
 }

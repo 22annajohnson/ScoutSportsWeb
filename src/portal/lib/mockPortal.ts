@@ -68,6 +68,21 @@ export type PortalInvoiceItem = {
   description: string;
 };
 
+export type PortalBillingProfile = {
+  paymentMethod: string;
+  billingContactEmail: string;
+  billingAddress: string;
+  taxStatus: string;
+};
+
+export type PortalSettingsPreferences = {
+  matchAlertsEmail: boolean;
+  bracketUpdatesEmail: boolean;
+  circleActivityEmail: boolean;
+  partnerOffersEmail: boolean;
+  smsAlertsEnabled: boolean;
+};
+
 export type PortalSportBreakdown = {
   sport: string;
   rating: number;
@@ -150,6 +165,21 @@ export const portalInvoiceHistory: PortalInvoiceItem[] = [
     description: "Scout Pro monthly start",
   },
 ];
+
+export const portalBillingProfile: PortalBillingProfile = {
+  paymentMethod: "Visa ending in 4242",
+  billingContactEmail: "alyssa@scoutsports.app",
+  billingAddress: "Brooklyn, NY",
+  taxStatus: "No tax information required",
+};
+
+export const portalSettingsPreferences: PortalSettingsPreferences = {
+  matchAlertsEmail: true,
+  bracketUpdatesEmail: true,
+  circleActivityEmail: true,
+  partnerOffersEmail: false,
+  smsAlertsEnabled: false,
+};
 
 export const portalProfileDraftSeed: PortalProfileDraft = {
   fullName: "Alyssa Carter",

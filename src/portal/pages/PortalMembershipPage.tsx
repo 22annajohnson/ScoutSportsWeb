@@ -2,14 +2,15 @@ import { CreditCard, ReceiptText, ShieldCheck, Sparkles, Star, WalletCards } fro
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { routes } from "@/lib/routes";
-import { portalInvoiceHistory, portalMembershipBenefitsByTier } from "../lib/mockPortal";
+import { portalMembershipBenefitsByTier } from "../lib/mockPortal";
 import { PortalPageHeader } from "../components/PortalPageHeader";
 import { usePortalSession } from "../lib/session";
 
 export function PortalMembershipPage() {
-  const { membership, isMembershipLoading, isMembershipRemote } = usePortalSession();
+  const { billingProfile, invoices, isBillingLoading, isBillingRemote, membership, isMembershipLoading, isMembershipRemote } =
+    usePortalSession();
 
-  if (!membership) {
+  if (!billingProfile || !membership) {
     return null;
   }
 
@@ -21,13 +22,21 @@ export function PortalMembershipPage() {
         eyebrow="Membership"
         title="Membership and billing visibility."
         description={
-          isMembershipRemote
-            ? "Your current plan, renewal timing, and membership access all stay visible here in one account view."
+          isMembershipRemote && isBillingRemote
+            ? "Your current plan, payment method, renewal timing, and invoice timeline all stay visible here in one account view."
+            : isMembershipRemote
+              ? "Your current plan, renewal timing, and membership access all stay visible here in one account view."
             : "This page keeps membership details organized in one place so players always know their current access."
         }
         aside={
           <div className="rounded-2xl border border-blue-300/20 bg-blue-500/10 px-4 py-4 text-sm text-blue-200">
-            {isMembershipLoading ? "Syncing membership..." : isMembershipRemote ? "Membership connected" : "Membership overview"}
+            {isMembershipLoading || isBillingLoading
+              ? "Syncing billing..."
+              : isMembershipRemote && isBillingRemote
+                ? "Billing connected"
+                : isMembershipRemote
+                  ? "Membership connected"
+                  : "Membership overview"}
           </div>
         }
       />
@@ -59,7 +68,7 @@ export function PortalMembershipPage() {
                 {[
                   ["Renews", membership.renewalLabel],
                   ["Billing source", membership.billingSource],
-                  ["Payment method", membership.paymentMethod],
+                  ["Payment method", billingProfile.paymentMethod || membership.paymentMethod],
                   ["Membership sync", membership.syncedAccessNote],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
@@ -110,13 +119,17 @@ export function PortalMembershipPage() {
             },
             {
               icon: WalletCards,
-              title: "Billing visibility",
-              text: "Renewal timing, payment method, and plan status are organized here so account decisions are easy to make at a glance.",
+              title: isBillingRemote ? "Connected billing profile" : "What a future billing source should own",
+              text: isBillingRemote
+                ? `Billing contact: ${billingProfile.billingContactEmail} • Address: ${billingProfile.billingAddress} • Tax status: ${billingProfile.taxStatus}`
+                : "Renewal timing, payment method, and plan status are organized here so account decisions are easy to make at a glance.",
             },
             {
               icon: ReceiptText,
-              title: "Invoice history",
-              text: "The membership page keeps a clean billing timeline ready for the full account experience.",
+              title: isBillingRemote ? "Invoice timeline connected" : "Invoice history",
+              text: isBillingRemote
+                ? "The invoice list below is now reading from the portal billing layer, so provider sync can update the timeline without changing this front-end contract."
+                : "The membership page keeps a clean billing timeline ready for the full account experience.",
             },
           ].map((item) => {
             const Icon = item.icon;
@@ -142,7 +155,13 @@ export function PortalMembershipPage() {
             </div>
 
             <div className="mt-6 grid gap-4">
-              {portalInvoiceHistory.map((invoice) => (
+              {invoices.length === 0 ? (
+                <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-6 text-sm leading-7 text-white/65">
+                  No invoices have been recorded for this player account yet.
+                </div>
+              ) : null}
+
+              {invoices.map((invoice) => (
                 <div key={invoice.id} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>

@@ -15,6 +15,7 @@ import { PortalHistoryPage } from "@/portal/pages/PortalHistoryPage";
 import { PortalMembershipPage } from "@/portal/pages/PortalMembershipPage";
 import { PortalOverviewPage } from "@/portal/pages/PortalOverviewPage";
 import { PortalProfilePage } from "@/portal/pages/PortalProfilePage";
+import { PortalSettingsPage } from "@/portal/pages/PortalSettingsPage";
 import { PortalStatsPage } from "@/portal/pages/PortalStatsPage";
 import { PortalSessionProvider } from "@/portal/lib/session";
 import { BusinessPortalAccessGate } from "@/businessPortal/components/BusinessPortalAccessGate";
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="profile" element={<PortalProfilePage />} />
             <Route path="stats" element={<PortalStatsPage />} />
             <Route path="history" element={<PortalHistoryPage />} />
+            <Route path="settings" element={<PortalSettingsPage />} />
           </Route>
         </Route>
         <Route

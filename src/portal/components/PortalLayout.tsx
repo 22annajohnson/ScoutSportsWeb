@@ -1,4 +1,4 @@
-import { CreditCard, History, LayoutGrid, LogOut, Medal, UserCircle2 } from "lucide-react";
+import { CreditCard, History, LayoutGrid, LogOut, Medal, Settings, UserCircle2 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Container } from "@/components/Container";
 import { GlassCard } from "@/components/GlassCard";
@@ -11,6 +11,7 @@ const portalNav = [
   { label: "Profile", href: routes.portalProfile, icon: UserCircle2 },
   { label: "Stats", href: routes.portalStats, icon: Medal },
   { label: "History", href: routes.portalHistory, icon: History },
+  { label: "Settings", href: routes.portalSettings, icon: Settings },
 ];
 
 export function PortalLayout() {
