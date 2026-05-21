@@ -260,6 +260,19 @@ export type PortalInvoiceRecord = {
   updated_at?: string;
 };
 
+export type PortalSettingsPreferencesRecord = {
+  user_id: string;
+  match_alerts_email: boolean;
+  bracket_updates_email: boolean;
+  circle_activity_email: boolean;
+  partner_offers_email: boolean;
+  sms_alerts_enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PortalSettingsPreferencesUpsert = Omit<PortalSettingsPreferencesRecord, "created_at" | "updated_at">;
+
 export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
@@ -902,4 +915,34 @@ export async function fetchPortalInvoices(userId: string) {
   }
 
   return data;
+}
+
+export async function fetchPortalSettingsPreferences(userId: string) {
+  const client = requireSupabase();
+
+  const { data, error } = await client
+    .from("player_portal_settings_preferences")
+    .select(
+      "user_id, match_alerts_email, bracket_updates_email, circle_activity_email, partner_offers_email, sms_alerts_enabled, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .maybeSingle<PortalSettingsPreferencesRecord>();
+
+  if (error) {
+    throw toAppError(error);
+  }
+
+  return data;
+}
+
+export async function upsertPortalSettingsPreferences(payload: PortalSettingsPreferencesUpsert) {
+  const client = requireSupabase();
+
+  const { error } = await client.from("player_portal_settings_preferences").upsert(payload, {
+    onConflict: "user_id",
+  });
+
+  if (error) {
+    throw toAppError(error);
+  }
 }
