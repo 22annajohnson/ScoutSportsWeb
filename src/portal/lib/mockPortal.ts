@@ -75,6 +75,14 @@ export type PortalBillingProfile = {
   taxStatus: string;
 };
 
+export type PortalSettingsPreferences = {
+  matchAlertsEmail: boolean;
+  bracketUpdatesEmail: boolean;
+  circleActivityEmail: boolean;
+  partnerOffersEmail: boolean;
+  smsAlertsEnabled: boolean;
+};
+
 export type PortalSportBreakdown = {
   sport: string;
   rating: number;
@@ -163,6 +171,14 @@ export const portalBillingProfile: PortalBillingProfile = {
   billingContactEmail: "alyssa@scoutsports.app",
   billingAddress: "Brooklyn, NY",
   taxStatus: "No tax information required",
+};
+
+export const portalSettingsPreferences: PortalSettingsPreferences = {
+  matchAlertsEmail: true,
+  bracketUpdatesEmail: true,
+  circleActivityEmail: true,
+  partnerOffersEmail: false,
+  smsAlertsEnabled: false,
 };
 
 export const portalProfileDraftSeed: PortalProfileDraft = {

@@ -7,10 +7,12 @@ import {
   fetchPortalHistory,
   fetchPortalMembership,
   fetchPortalProfile,
+  fetchPortalSettingsPreferences,
   fetchPortalSportBreakdowns,
   fetchPortalStatsSummary,
   hasSupabaseConfig,
   supabase,
+  upsertPortalSettingsPreferences,
   upsertPortalProfile,
 } from "@/lib/supabase";
 import {
@@ -21,6 +23,7 @@ import {
   portalMembership,
   portalPlayer,
   portalProfileDraftSeed,
+  portalSettingsPreferences,
   type PortalBillingProfile,
   type PortalHistoryItem,
   type PortalInvoiceItem,
@@ -28,6 +31,7 @@ import {
   portalStatsSnapshot,
   type PortalMembership,
   type PortalProfileDraft,
+  type PortalSettingsPreferences,
   type PortalSportBreakdown,
   type PortalStatsSnapshot,
 } from "./mockPortal";
@@ -280,6 +284,22 @@ function mapInvoiceRecords(records: Awaited<ReturnType<typeof fetchPortalInvoice
   }));
 }
 
+function mapSettingsPreferencesRecord(
+  record: Awaited<ReturnType<typeof fetchPortalSettingsPreferences>>,
+): PortalSettingsPreferences | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    matchAlertsEmail: record.match_alerts_email,
+    bracketUpdatesEmail: record.bracket_updates_email,
+    circleActivityEmail: record.circle_activity_email,
+    partnerOffersEmail: record.partner_offers_email,
+    smsAlertsEnabled: record.sms_alerts_enabled,
+  };
+}
+
 type PortalSessionContextValue = {
   isReady: boolean;
   isAuthenticated: boolean;
@@ -289,19 +309,23 @@ type PortalSessionContextValue = {
   isStatsRemote: boolean;
   isHistoryRemote: boolean;
   isBillingRemote: boolean;
+  isSettingsRemote: boolean;
   isMembershipLoading: boolean;
   isStatsLoading: boolean;
   isHistoryLoading: boolean;
   isBillingLoading: boolean;
+  isSettingsLoading: boolean;
   authUser: User | null;
   player: ReturnType<typeof getPlayerFromProfile> | null;
   profile: ReturnType<typeof getPortalProfileSnapshot> | null;
   membership: PortalMembership | null;
   billingProfile: PortalBillingProfile | null;
   invoices: PortalInvoiceItem[];
+  settingsPreferences: PortalSettingsPreferences | null;
   stats: PortalStatsSnapshot | null;
   sportBreakdowns: PortalSportBreakdown[];
   history: PortalHistoryItem[];
+  saveSettingsPreferences: (nextPreferences: PortalSettingsPreferences) => Promise<void>;
   saveProfile: (nextProfile: PortalProfileDraft) => Promise<void>;
   resetProfile: () => void;
   signInWithEmail: (email: string) => Promise<void>;
@@ -327,12 +351,15 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [billingProfile, setBillingProfile] = useState<PortalBillingProfile>(portalBillingProfile);
   const [invoices, setInvoices] = useState<PortalInvoiceItem[]>(portalInvoiceHistory);
   const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [settingsPreferences, setSettingsPreferences] = useState<PortalSettingsPreferences>(portalSettingsPreferences);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
   const isProfileRemote = Boolean(authUser);
   const isMembershipRemote = Boolean(authUser);
   const isStatsRemote = Boolean(authUser);
   const isHistoryRemote = Boolean(authUser);
   const isBillingRemote = Boolean(authUser);
+  const isSettingsRemote = Boolean(authUser);
 
   const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
 
@@ -615,6 +642,46 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     };
   }, [authUser]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setSettingsPreferences(portalSettingsPreferences);
+      setIsSettingsLoading(false);
+      return;
+    }
+
+    const currentAuthUser = authUser;
+    let isMounted = true;
+    setIsSettingsLoading(true);
+
+    async function loadSettingsPreferences() {
+      try {
+        const record = await fetchPortalSettingsPreferences(currentAuthUser.id);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSettingsPreferences(mapSettingsPreferencesRecord(record) ?? portalSettingsPreferences);
+      } catch (error) {
+        console.error("Unable to load remote portal settings preferences", error);
+
+        if (isMounted) {
+          setSettingsPreferences(portalSettingsPreferences);
+        }
+      } finally {
+        if (isMounted) {
+          setIsSettingsLoading(false);
+        }
+      }
+    }
+
+    void loadSettingsPreferences();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
   const value = useMemo<PortalSessionContextValue>(
     () => ({
       isReady,
@@ -625,19 +692,39 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isStatsRemote,
       isHistoryRemote,
       isBillingRemote,
+      isSettingsRemote,
       isMembershipLoading,
       isStatsLoading,
       isHistoryLoading,
       isBillingLoading,
+      isSettingsLoading,
       authUser,
       player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
       profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
       membership: isAuthenticated ? membership : null,
       billingProfile: isAuthenticated ? billingProfile : null,
       invoices: isAuthenticated ? invoices : [],
+      settingsPreferences: isAuthenticated ? settingsPreferences : null,
       stats: isAuthenticated ? stats : null,
       sportBreakdowns: isAuthenticated ? sportBreakdowns : [],
       history: isAuthenticated ? history : [],
+      saveSettingsPreferences: async (nextPreferences) => {
+        setSettingsPreferences(nextPreferences);
+        const currentAuthUser = authUser;
+
+        if (!currentAuthUser) {
+          return;
+        }
+
+        await upsertPortalSettingsPreferences({
+          user_id: currentAuthUser.id,
+          match_alerts_email: nextPreferences.matchAlertsEmail,
+          bracket_updates_email: nextPreferences.bracketUpdatesEmail,
+          circle_activity_email: nextPreferences.circleActivityEmail,
+          partner_offers_email: nextPreferences.partnerOffersEmail,
+          sms_alerts_enabled: nextPreferences.smsAlertsEnabled,
+        });
+      },
       saveProfile: async (nextProfile) => {
         setProfileDraft(nextProfile);
         const currentAuthUser = authUser;
@@ -708,6 +795,8 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isHistoryRemote,
       isBillingLoading,
       isBillingRemote,
+      isSettingsLoading,
+      isSettingsRemote,
       isStatsLoading,
       isStatsRemote,
       isReady,
@@ -716,6 +805,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       history,
       invoices,
       membership,
+      settingsPreferences,
       sportBreakdowns,
       stats,
       profileDraft,
