@@ -23,7 +23,7 @@ export function PricingPage() {
             {pricingTiers.map((tier) => (
               <GlassCard
                 key={tier.name}
-                className={`relative overflow-hidden p-7 ${tier.featured ? "border-violet-400/40 shadow-[0_20px_80px_rgba(124,58,237,0.28)]" : ""}`}
+                className={`relative overflow-hidden p-7 ${tier.featured ? "border-violet-400/40 shadow-[0_20px_80px_rgb(var(--color-accent-purple)/0.28)]" : ""}`}
               >
                 <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-br ${tier.accent} opacity-80 blur-3xl`} />
                 <div className="relative">

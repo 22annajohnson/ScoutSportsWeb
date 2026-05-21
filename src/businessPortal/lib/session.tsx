@@ -58,6 +58,9 @@ const BILLING_STORAGE_KEY = "scout.businessPortal.billing";
 const CONTENT_STORAGE_KEY = "scout.businessPortal.content";
 const TEAM_STORAGE_KEY = "scout.businessPortal.team";
 
+type BusinessPortalAuthStatus = "checking" | "signed_out" | "demo" | "authenticated";
+type BusinessPortalOperation = "idle" | "provisioning_workspace" | "accepting_invitation";
+
 type WorkspaceIdentity = typeof businessPortalOwner & {
   workspaceName: string;
   workspaceSlug: string;
@@ -449,12 +452,9 @@ async function captureAuditEvent(input: {
 }
 
 export function BusinessPortalSessionProvider({ children }: { children: ReactNode }) {
-  const [isReady, setIsReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isSupabaseMode, setIsSupabaseMode] = useState(false);
+  const [authStatus, setAuthStatus] = useState<BusinessPortalAuthStatus>("checking");
+  const [operation, setOperation] = useState<BusinessPortalOperation>("idle");
   const [needsBusinessSetup, setNeedsBusinessSetup] = useState(false);
-  const [isProvisioningBusiness, setIsProvisioningBusiness] = useState(false);
-  const [isAcceptingInvitation, setIsAcceptingInvitation] = useState(false);
   const [backendError, setBackendError] = useState("");
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
@@ -465,6 +465,11 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
   const [teamState, setTeamState] = useState<BusinessPortalWorkspaceMember[]>(businessPortalTeamSeed);
   const [invoiceState, setInvoiceState] = useState<typeof businessPortalInvoicesSeed>(businessPortalInvoicesSeed);
   const [activityState, setActivityState] = useState<BusinessPortalActivityItem[]>(businessPortalActivitySeed);
+  const isReady = authStatus !== "checking";
+  const isAuthenticated = authStatus === "authenticated" || authStatus === "demo";
+  const isSupabaseMode = authStatus === "authenticated";
+  const isProvisioningBusiness = operation === "provisioning_workspace";
+  const isAcceptingInvitation = operation === "accepting_invitation";
 
   async function refreshWorkspace(user: User, targetBusinessId?: string) {
     const memberships = await fetchActiveBusinessMemberships(user.id);
@@ -551,8 +556,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
     }
 
     if (!hasSupabaseConfig()) {
-      setIsAuthenticated(storedValue === "active");
-      setIsReady(true);
+      setAuthStatus(storedValue === "active" ? "demo" : "signed_out");
       return;
     }
 
@@ -566,8 +570,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         }
 
         setSupabaseUser(session?.user ?? null);
-        setIsAuthenticated(Boolean(session?.user));
-        setIsSupabaseMode(Boolean(session?.user));
+        setAuthStatus(session?.user ? "authenticated" : "signed_out");
 
         if (session?.user) {
           await refreshWorkspace(session.user);
@@ -579,7 +582,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         }
       } finally {
         if (isMounted) {
-          setIsReady(true);
+          setAuthStatus((current) => (current === "checking" ? "signed_out" : current));
         }
       }
     }
@@ -588,18 +591,17 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
 
     const authSubscription = onSupabaseAuthStateChange((session) => {
       setSupabaseUser(session?.user ?? null);
-      setIsAuthenticated(Boolean(session?.user));
-      setIsSupabaseMode(Boolean(session?.user));
+      setAuthStatus(session?.user ? "authenticated" : "signed_out");
       setBackendError("");
 
       if (!session?.user) {
         setNeedsBusinessSetup(false);
         setBusinessId(null);
-        setIsReady(true);
+        setAuthStatus("signed_out");
         return;
       }
 
-      void refreshWorkspace(session.user).finally(() => setIsReady(true));
+      void refreshWorkspace(session.user).finally(() => setAuthStatus("authenticated"));
     });
 
     return () => {
@@ -982,8 +984,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
       },
       signInAsDemo: () => {
         window.localStorage.setItem(STORAGE_KEY, "active");
-        setIsSupabaseMode(false);
-        setIsAuthenticated(true);
+        setAuthStatus("demo");
         setNeedsBusinessSetup(false);
         setCurrentRole("Owner");
       },
@@ -998,16 +999,16 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         }
 
         window.localStorage.removeItem(STORAGE_KEY);
-        setIsAuthenticated(false);
+        setAuthStatus("signed_out");
       },
       createWorkspace: async (input) => {
         if (!isSupabaseMode) {
           setBusinessDraft(input);
-          setIsAuthenticated(true);
+          setAuthStatus("demo");
           return;
         }
 
-        setIsProvisioningBusiness(true);
+        setOperation("provisioning_workspace");
         setBackendError("");
 
         try {
@@ -1020,11 +1021,11 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
           setBackendError(error instanceof Error ? error.message : "Unable to create the business workspace.");
           throw error;
         } finally {
-          setIsProvisioningBusiness(false);
+          setOperation("idle");
         }
       },
       acceptInvitationToken: async (inviteToken) => {
-        setIsAcceptingInvitation(true);
+        setOperation("accepting_invitation");
         setBackendError("");
 
         try {
@@ -1038,7 +1039,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
           setBackendError(error instanceof Error ? error.message : "Unable to accept the business invitation.");
           throw error;
         } finally {
-          setIsAcceptingInvitation(false);
+          setOperation("idle");
         }
       },
     }),

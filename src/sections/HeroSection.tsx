@@ -61,7 +61,7 @@ export function HeroSection() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="relative h-[720px]"
           >
-            <div className="absolute inset-y-8 right-0 w-full rounded-[2.5rem] border border-white/10 bg-white/5 p-5 shadow-[0_40px_120px_rgba(76,29,149,0.35)] backdrop-blur-2xl lg:w-[82%]">
+            <div className="absolute inset-y-8 right-0 w-full rounded-[2.5rem] border border-white/10 bg-white/5 p-5 shadow-[0_40px_120px_rgb(var(--color-accent-purple)/0.35)] backdrop-blur-2xl lg:w-[82%]">
               <div className="flex h-full flex-col rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
@@ -112,7 +112,7 @@ export function HeroSection() {
               </div>
             </div>
 
-            <GlassCard className="absolute bottom-12 left-0 w-60 bg-black/50 p-4 shadow-[0_20px_80px_rgba(59,130,246,0.18)] backdrop-blur-2xl">
+            <GlassCard className="absolute bottom-12 left-0 w-60 bg-black/50 p-4 shadow-[0_20px_80px_rgb(var(--color-accent-blue)/0.18)] backdrop-blur-2xl">
               <p className="text-xs uppercase tracking-[0.3em] text-white/45">Inner Circle</p>
               <div className="mt-4 space-y-3">
                 {[

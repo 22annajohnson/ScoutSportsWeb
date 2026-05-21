@@ -23,7 +23,7 @@ export function PortalLayout() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-text">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.28),transparent_30%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_32%),radial-gradient(circle_at_bottom,rgba(59,130,246,0.12),transparent_24%)]" />
+      <div className="app-ambient-player pointer-events-none fixed inset-0" />
       <div className="relative z-10 py-6 sm:py-8">
         <Container>
           <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
