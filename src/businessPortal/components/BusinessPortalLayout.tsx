@@ -15,7 +15,7 @@ const businessPortalNav = [
 ];
 
 export function BusinessPortalLayout() {
-  const { business, isSupabaseMode, signOut, user } = useBusinessPortalSession();
+  const { authStatus, business, signOut, user } = useBusinessPortalSession();
 
   if (!user || !business) {
     return null;
@@ -23,7 +23,7 @@ export function BusinessPortalLayout() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-text">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(244,114,182,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(20,184,166,0.16),transparent_30%),radial-gradient(circle_at_bottom,rgba(59,130,246,0.12),transparent_24%)]" />
+      <div className="app-ambient-business pointer-events-none fixed inset-0" />
       <div className="relative z-10 py-6 sm:py-8">
         <Container>
           <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
@@ -39,7 +39,7 @@ export function BusinessPortalLayout() {
                   {business.verificationStatus}
                 </div>
                 <p className="mt-4 text-sm leading-7 text-white/60">
-                  {isSupabaseMode
+                  {authStatus === "authenticated"
                     ? `${user.fullName} is signed into this live business workspace.`
                     : `${user.fullName} is browsing the sample business workspace.`}
                 </p>
@@ -75,7 +75,7 @@ export function BusinessPortalLayout() {
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
               >
                 <LogOut className="h-4 w-4" />
-                {isSupabaseMode ? "Sign out" : "Exit business demo"}
+                {authStatus === "authenticated" ? "Sign out" : "Exit business demo"}
               </button>
             </GlassCard>
 

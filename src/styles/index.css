@@ -6,6 +6,24 @@
 
 :root {
   color-scheme: dark;
+  --color-background: 6 7 11;
+  --color-app-background: 9 9 15;
+  --color-surface: 16 19 27;
+  --color-border: 255 255 255;
+  --color-text: 244 247 251;
+  --color-text-muted: 156 166 186;
+  --color-accent-purple: 139 92 246;
+  --color-accent-blue: 56 189 248;
+  --color-accent-lilac: 196 181 253;
+  --color-accent-pink: 244 114 182;
+  --color-accent-teal: 20 184 166;
+  --color-accent-emerald: 52 211 153;
+  --color-accent-sky: 14 165 233;
+  --color-danger: 248 113 113;
+  --shadow-glow:
+    0 0 0 1px rgb(var(--color-border) / 0.06),
+    0 24px 80px rgb(var(--color-accent-blue) / 0.12),
+    0 32px 100px rgb(var(--color-accent-purple) / 0.15);
 }
 
 html {
@@ -15,8 +33,8 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  background: #09090f;
-  color: #f4f7fb;
+  background: rgb(var(--color-app-background));
+  color: rgb(var(--color-text));
   font-family: "Space Grotesk", sans-serif;
 }
 
@@ -34,6 +52,40 @@ a {
 }
 
 ::selection {
-  background: rgba(139, 92, 246, 0.35);
-  color: #ffffff;
+  background: rgb(var(--color-accent-purple) / 0.35);
+  color: rgb(var(--color-text));
+}
+
+@layer components {
+  .app-ambient-marketing {
+    background:
+      radial-gradient(circle at top left, rgb(var(--color-accent-purple) / 0.28), transparent 30%),
+      radial-gradient(circle at top right, rgb(var(--color-accent-blue) / 0.26), transparent 28%),
+      radial-gradient(circle at bottom, rgb(var(--color-accent-lilac) / 0.18), transparent 28%);
+  }
+
+  .app-ambient-player {
+    background:
+      radial-gradient(circle at top left, rgb(var(--color-accent-purple) / 0.28), transparent 30%),
+      radial-gradient(circle at top right, rgb(var(--color-accent-blue) / 0.18), transparent 32%),
+      radial-gradient(circle at bottom, rgb(var(--color-accent-blue) / 0.12), transparent 24%);
+  }
+
+  .app-ambient-business {
+    background:
+      radial-gradient(circle at top left, rgb(var(--color-accent-pink) / 0.18), transparent 28%),
+      radial-gradient(circle at top right, rgb(var(--color-accent-teal) / 0.16), transparent 30%),
+      radial-gradient(circle at bottom, rgb(var(--color-accent-blue) / 0.12), transparent 24%);
+  }
+
+  .app-ambient-vignette {
+    background:
+      linear-gradient(
+        to bottom,
+        rgb(var(--color-border) / 0.02),
+        transparent 20%,
+        transparent 80%,
+        rgb(var(--color-border) / 0.02)
+      );
+  }
 }

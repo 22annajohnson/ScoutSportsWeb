@@ -6,7 +6,7 @@ import { useBusinessPortalSession } from "../lib/session";
 import { type BusinessPortalProfileDraft } from "../lib/mockBusinessPortal";
 
 export function BusinessPortalProfilePage() {
-  const { business, currentRole, isSupabaseMode, permissions, resetBusinessProfile, saveBusinessProfile } =
+  const { authStatus, business, currentRole, permissions, resetBusinessProfile, saveBusinessProfile } =
     useBusinessPortalSession();
   const [formState, setFormState] = useState<BusinessPortalProfileDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -249,7 +249,7 @@ export function BusinessPortalProfilePage() {
               <button type="submit" disabled={!permissions.canManageProfile || isSaving} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
                 {permissions.canManageProfile ? (isSaving ? "Saving..." : "Save business profile") : "Business settings are read only"}
               </button>
-              {!isSupabaseMode ? (
+              {authStatus !== "authenticated" ? (
                 <button type="button" disabled={!permissions.canManageProfile} onClick={handleReset} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50">
                   <RotateCcw className="h-4 w-4" />
                   Reset sample data

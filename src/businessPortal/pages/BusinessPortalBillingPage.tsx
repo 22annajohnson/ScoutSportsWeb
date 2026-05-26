@@ -6,7 +6,7 @@ import { useBusinessPortalSession } from "../lib/session";
 import { type BusinessPortalBillingSettings } from "../lib/mockBusinessPortal";
 
 export function BusinessPortalBillingPage() {
-  const { billing, currentRole, invoices, isSupabaseMode, permissions, saveBillingSettings } = useBusinessPortalSession();
+  const { authStatus, billing, currentRole, invoices, permissions, saveBillingSettings } = useBusinessPortalSession();
   const [formState, setFormState] = useState<BusinessPortalBillingSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -68,7 +68,9 @@ export function BusinessPortalBillingPage() {
         spendCapLabel: formState.spendCapLabel.trim(),
       });
       setSaveMessage(
-        isSupabaseMode ? "Billing settings saved for the live workspace." : "Billing settings saved for the sample workspace.",
+        authStatus === "authenticated"
+          ? "Billing settings saved for the live workspace."
+          : "Billing settings saved for the sample workspace.",
       );
     } catch (error) {
       console.error(error);

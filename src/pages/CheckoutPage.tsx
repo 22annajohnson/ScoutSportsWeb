@@ -3,9 +3,12 @@ import { Check, ChevronLeft, CreditCard, MapPin, Sparkles } from "lucide-react";
 import { Navigate, useParams } from "react-router-dom";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { FormError, FormField, FormNote, TextInput } from "@/components/FormControls";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
+import { getFormText } from "@/lib/formData";
+import { isFormSubmitted, isFormSubmitting, type FormStatus } from "@/lib/formStatus";
 import { getSignupPath, routes } from "@/lib/routes";
 import { getSuspiciousSubmissionMessage, HoneypotField } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertCheckoutIntent } from "@/lib/supabase";
@@ -27,12 +30,12 @@ const checkoutCopy = {
 
 export function CheckoutPage() {
   const { tierId } = useParams();
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState<FormStatus>("editing");
   const [errorMessage, setErrorMessage] = useState("");
   const [formMountedAt] = useState(() => Date.now());
   const selectedTier = tierId === "pro" || tierId === "elite" ? tierId : null;
   const tier = pricingTiers.find((plan) => plan.slug === selectedTier);
+  const isSubmitting = isFormSubmitting(formStatus);
 
   if (!tier || !selectedTier) {
     return <Navigate to={routes.pricing} replace />;
@@ -57,7 +60,7 @@ export function CheckoutPage() {
     }
 
     setErrorMessage("");
-    setIsSubmitting(true);
+    setFormStatus("submitting");
 
     const formData = new FormData(event.currentTarget);
     const attribution = getMarketingAttribution();
@@ -65,22 +68,23 @@ export function CheckoutPage() {
     try {
       await insertCheckoutIntent({
         selected_tier: resolvedTier,
-        email: String(formData.get("email") ?? "").trim(),
-        first_name: String(formData.get("first_name") ?? "").trim(),
-        city: String(formData.get("city") ?? "").trim(),
-        primary_sport: String(formData.get("primary_sport") ?? "").trim(),
+        email: getFormText(formData, "email"),
+        first_name: getFormText(formData, "first_name"),
+        city: getFormText(formData, "city"),
+        primary_sport: getFormText(formData, "primary_sport"),
         intent_status: "checkout_not_live",
         checkout_path: window.location.pathname,
-        honeypot_field: String(formData.get("company") ?? "").trim(),
+        honeypot_field: getFormText(formData, "company"),
         ...attribution,
       });
 
-      setIsSubmitted(true);
+      setFormStatus("submitted");
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong while saving your checkout interest. Please try again.");
+      setFormStatus("editing");
     } finally {
-      setIsSubmitting(false);
+      setFormStatus((current) => (current === "submitting" ? "editing" : current));
     }
   }
 
@@ -129,7 +133,7 @@ export function CheckoutPage() {
           </div>
 
           <GlassCard className="p-7">
-            {isSubmitted ? (
+            {isFormSubmitted(formStatus) ? (
               <div className="flex min-h-[520px] flex-col justify-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/30 to-blue-500/30 text-violet-200">
                   <Sparkles className="h-6 w-6" />
@@ -163,60 +167,37 @@ export function CheckoutPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-2">
-                    <span className="text-sm text-white/70">First name</span>
-                    <input
-                      name="first_name"
-                      required
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="Alex"
-                    />
-                  </label>
-                  <label className="space-y-2">
-                    <span className="text-sm text-white/70">Email</span>
-                    <input
-                      name="email"
-                      required
-                      type="email"
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="you@example.com"
-                    />
-                  </label>
+                  <FormField label="First name">
+                    <TextInput name="first_name" required placeholder="Alex" />
+                  </FormField>
+                  <FormField label="Email">
+                    <TextInput name="email" required type="email" placeholder="you@example.com" />
+                  </FormField>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-2">
-                    <span className="flex items-center gap-2 text-sm text-white/70">
-                      <MapPin className="h-4 w-4 text-blue-300" />
-                      City
-                    </span>
-                    <input
-                      name="city"
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="Brooklyn"
-                    />
-                  </label>
-                  <label className="space-y-2">
-                    <span className="text-sm text-white/70">Main sport</span>
-                    <input
-                      name="primary_sport"
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="Basketball, tennis, pickleball..."
-                    />
-                  </label>
+                  <FormField
+                    label={
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-blue-300" />
+                        City
+                      </span>
+                    }
+                  >
+                    <TextInput name="city" placeholder="Brooklyn" />
+                  </FormField>
+                  <FormField label="Main sport">
+                    <TextInput name="primary_sport" placeholder="Basketball, tennis, pickleball..." />
+                  </FormField>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/60">
+                <FormNote>
                   <CreditCard className="mb-3 h-5 w-5 text-violet-300" />
                   No payment is collected on this page. This is a checkout-intent reservation until paid
                   memberships are ready to launch.
-                </div>
+                </FormNote>
 
-                {errorMessage ? (
-                  <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
-                    {errorMessage}
-                  </div>
-                ) : null}
+                {errorMessage ? <FormError>{errorMessage}</FormError> : null}
 
                 <button
                   type="submit"

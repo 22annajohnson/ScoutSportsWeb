@@ -2,20 +2,23 @@ import { FormEvent, useState } from "react";
 import { MapPin, Sparkles } from "lucide-react";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { FormError, FormField, FormNote, SelectInput, TextareaInput, TextInput } from "@/components/FormControls";
 import { GlassCard } from "@/components/GlassCard";
 import { SectionHeading } from "@/components/SectionHeading";
 import { businessCategories, partnerBenefits } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
+import { getFormText } from "@/lib/formData";
+import { isFormSubmitted, isFormSubmitting, type FormStatus } from "@/lib/formStatus";
 import { routes } from "@/lib/routes";
 import { getSuspiciousSubmissionMessage, HoneypotField } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertPartnerLead } from "@/lib/supabase";
 import { CTASection } from "@/sections/CTASection";
 
 export function BusinessPage() {
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState<FormStatus>("editing");
   const [errorMessage, setErrorMessage] = useState("");
   const [formMountedAt] = useState(() => Date.now());
+  const isSubmitting = isFormSubmitting(formStatus);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,30 +36,31 @@ export function BusinessPage() {
     }
 
     setErrorMessage("");
-    setIsSubmitting(true);
+    setFormStatus("submitting");
 
     const formData = new FormData(event.currentTarget);
     const attribution = getMarketingAttribution();
 
     try {
       await insertPartnerLead({
-        contact_name: String(formData.get("contact_name") ?? "").trim(),
-        email: String(formData.get("email") ?? "").trim(),
-        organization_name: String(formData.get("organization_name") ?? "").trim(),
-        organization_type: String(formData.get("organization_type") ?? "").trim(),
-        city: String(formData.get("city") ?? "").trim(),
-        partnership_interest: String(formData.get("partnership_interest") ?? "").trim(),
-        notes: String(formData.get("notes") ?? "").trim(),
-        honeypot_field: String(formData.get("company") ?? "").trim(),
+        contact_name: getFormText(formData, "contact_name"),
+        email: getFormText(formData, "email"),
+        organization_name: getFormText(formData, "organization_name"),
+        organization_type: getFormText(formData, "organization_type"),
+        city: getFormText(formData, "city"),
+        partnership_interest: getFormText(formData, "partnership_interest"),
+        notes: getFormText(formData, "notes"),
+        honeypot_field: getFormText(formData, "company"),
         ...attribution,
       });
 
-      setIsSubmitted(true);
+      setFormStatus("submitted");
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong while saving your partnership request. Please try again.");
+      setFormStatus("editing");
     } finally {
-      setIsSubmitting(false);
+      setFormStatus((current) => (current === "submitting" ? "editing" : current));
     }
   }
 
@@ -127,7 +131,7 @@ export function BusinessPage() {
             </GlassCard>
 
             <GlassCard className="p-8">
-              {isSubmitted ? (
+              {isFormSubmitted(formStatus) ? (
                 <div className="flex min-h-[560px] flex-col justify-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/30 to-blue-500/30 text-violet-200">
                     <Sparkles className="h-6 w-6" />
@@ -162,45 +166,20 @@ export function BusinessPage() {
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-2">
-                      <span className="text-sm text-white/70">Contact name</span>
-                      <input
-                        name="contact_name"
-                        required
-                        className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                        placeholder="Alex Rivera"
-                      />
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-sm text-white/70">Email</span>
-                      <input
-                        name="email"
-                        type="email"
-                        required
-                        className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                        placeholder="alex@yourbusiness.com"
-                      />
-                    </label>
+                    <FormField label="Contact name">
+                      <TextInput name="contact_name" required placeholder="Alex Rivera" />
+                    </FormField>
+                    <FormField label="Email">
+                      <TextInput name="email" type="email" required placeholder="alex@yourbusiness.com" />
+                    </FormField>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-2">
-                      <span className="text-sm text-white/70">Business or venue</span>
-                      <input
-                        name="organization_name"
-                        required
-                        className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                        placeholder="Baseline Social Club"
-                      />
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-sm text-white/70">Business type</span>
-                      <select
-                        name="organization_type"
-                        required
-                        defaultValue=""
-                        className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition focus:border-violet-300/50"
-                      >
+                    <FormField label="Business or venue">
+                      <TextInput name="organization_name" required placeholder="Baseline Social Club" />
+                    </FormField>
+                    <FormField label="Business type">
+                      <SelectInput name="organization_type" required defaultValue="">
                         <option value="" disabled>
                           Select one
                         </option>
@@ -210,53 +189,40 @@ export function BusinessPage() {
                         <option value="trainer">Trainer or coach</option>
                         <option value="brand">Brand or sponsor</option>
                         <option value="other">Other</option>
-                      </select>
-                    </label>
+                      </SelectInput>
+                    </FormField>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-2">
-                      <span className="flex items-center gap-2 text-sm text-white/70">
+                    <FormField
+                      label={
+                        <span className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-blue-300" />
                         City
                       </span>
-                      <input
-                        name="city"
-                        required
-                        className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                        placeholder="Brooklyn"
-                      />
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-sm text-white/70">Partnership interest</span>
-                      <input
-                        name="partnership_interest"
-                        className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                        placeholder="Sponsored placement, offers, launch partner..."
-                      />
-                    </label>
+                      }
+                    >
+                      <TextInput name="city" required placeholder="Brooklyn" />
+                    </FormField>
+                    <FormField label="Partnership interest">
+                      <TextInput name="partnership_interest" placeholder="Sponsored placement, offers, launch partner..." />
+                    </FormField>
                   </div>
 
-                  <label className="space-y-2">
-                    <span className="text-sm text-white/70">Notes</span>
-                    <textarea
+                  <FormField label="Notes">
+                    <TextareaInput
                       name="notes"
-                      className="min-h-32 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                       placeholder="Tell us about your venue, audience, offer, neighborhood, or the kind of players you want to reach."
                     />
-                  </label>
+                  </FormField>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/60">
+                  <FormNote>
                     <Sparkles className="mb-3 h-5 w-5 text-violet-300" />
                     This is an early partnership interest form. We are using it to prioritize launch-market venues,
                     clubs, and local business partnerships before broader rollout.
-                  </div>
+                  </FormNote>
 
-                  {errorMessage ? (
-                    <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
-                      {errorMessage}
-                    </div>
-                  ) : null}
+                  {errorMessage ? <FormError>{errorMessage}</FormError> : null}
 
                   <button
                     type="submit"

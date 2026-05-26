@@ -3,9 +3,12 @@ import { Check, ChevronLeft, MapPin, Sparkles } from "lucide-react";
 import { Navigate, useParams } from "react-router-dom";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { FormError, FormField, FormNote, TextareaInput, TextInput } from "@/components/FormControls";
 import { GlassCard } from "@/components/GlassCard";
 import { pricingTiers } from "@/data/site";
 import { getMarketingAttribution } from "@/lib/attribution";
+import { getFormText } from "@/lib/formData";
+import { isFormSubmitted, isFormSubmitting, type FormStatus } from "@/lib/formStatus";
 import { routes } from "@/lib/routes";
 import { getSuspiciousSubmissionMessage, HoneypotField } from "@/lib/spamProtection";
 import { hasSupabaseConfig, insertSportInterest } from "@/lib/supabase";
@@ -21,11 +24,11 @@ const tierNotes = {
 
 export function SignupPage() {
   const { tierId } = useParams();
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState<FormStatus>("editing");
   const [errorMessage, setErrorMessage] = useState("");
   const [formMountedAt] = useState(() => Date.now());
   const tier = pricingTiers.find((plan) => plan.slug === tierId);
+  const isSubmitting = isFormSubmitting(formStatus);
 
   if (!tier || tierId !== "free") {
     return <Navigate to={routes.pricing} replace />;
@@ -49,31 +52,32 @@ export function SignupPage() {
     }
 
     setErrorMessage("");
-    setIsSubmitting(true);
+    setFormStatus("submitting");
 
     const formData = new FormData(event.currentTarget);
     const attribution = getMarketingAttribution();
 
     try {
       await insertSportInterest({
-        first_name: String(formData.get("first_name") ?? "").trim(),
-        email: String(formData.get("email") ?? "").trim(),
-        city: String(formData.get("city") ?? "").trim(),
-        primary_sport: String(formData.get("primary_sport") ?? "").trim(),
-        looking_for: String(formData.get("looking_for") ?? "").trim(),
+        first_name: getFormText(formData, "first_name"),
+        email: getFormText(formData, "email"),
+        city: getFormText(formData, "city"),
+        primary_sport: getFormText(formData, "primary_sport"),
+        looking_for: getFormText(formData, "looking_for"),
         preferred_tier: "free",
         source_intent: "free_signup",
         launch_status_at_signup: "pre_release",
-        honeypot_field: String(formData.get("company") ?? "").trim(),
+        honeypot_field: getFormText(formData, "company"),
         ...attribution,
       });
 
-      setIsSubmitted(true);
+      setFormStatus("submitted");
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong while saving your interest. Please try again.");
+      setFormStatus("editing");
     } finally {
-      setIsSubmitting(false);
+      setFormStatus((current) => (current === "submitting" ? "editing" : current));
     }
   }
 
@@ -122,7 +126,7 @@ export function SignupPage() {
           </div>
 
           <GlassCard className="p-7">
-            {isSubmitted ? (
+            {isFormSubmitted(formStatus) ? (
               <div className="flex min-h-[520px] flex-col justify-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/30 to-blue-500/30 text-violet-200">
                   <Sparkles className="h-6 w-6" />
@@ -156,71 +160,44 @@ export function SignupPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-2">
-                    <span className="text-sm text-white/70">First name</span>
-                    <input
-                      name="first_name"
-                      required
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="Alex"
-                    />
-                  </label>
-                  <label className="space-y-2">
-                    <span className="text-sm text-white/70">Email</span>
-                    <input
-                      name="email"
-                      required
-                      type="email"
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="you@example.com"
-                    />
-                  </label>
+                  <FormField label="First name">
+                    <TextInput name="first_name" required placeholder="Alex" />
+                  </FormField>
+                  <FormField label="Email">
+                    <TextInput name="email" required type="email" placeholder="you@example.com" />
+                  </FormField>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-2">
-                    <span className="flex items-center gap-2 text-sm text-white/70">
-                      <MapPin className="h-4 w-4 text-blue-300" />
-                      City
-                    </span>
-                    <input
-                      name="city"
-                      required
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="Brooklyn"
-                    />
-                  </label>
-                  <label className="space-y-2">
-                    <span className="text-sm text-white/70">Main sport</span>
-                    <input
-                      name="primary_sport"
-                      required
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
-                      placeholder="Basketball, tennis, pickleball..."
-                    />
-                  </label>
+                  <FormField
+                    label={
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-blue-300" />
+                        City
+                      </span>
+                    }
+                  >
+                    <TextInput name="city" required placeholder="Brooklyn" />
+                  </FormField>
+                  <FormField label="Main sport">
+                    <TextInput name="primary_sport" required placeholder="Basketball, tennis, pickleball..." />
+                  </FormField>
                 </div>
 
-                <label className="space-y-2">
-                  <span className="text-sm text-white/70">What are you looking for?</span>
-                  <textarea
+                <FormField label="What are you looking for?">
+                  <TextareaInput
                     name="looking_for"
-                    className="min-h-32 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-violet-300/50"
                     placeholder="Better pickup runs, consistent doubles partners, competitive brackets, post-game spots..."
                   />
-                </label>
+                </FormField>
 
-                {errorMessage ? (
-                  <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
-                    {errorMessage}
-                  </div>
-                ) : null}
+                {errorMessage ? <FormError>{errorMessage}</FormError> : null}
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/60">
+                <FormNote>
                   <Sparkles className="mb-3 h-5 w-5 text-violet-300" />
                   This is interest capture for Free access and sport availability. Pro and Elite will use separate
                   checkout pages when paid memberships are ready.
-                </div>
+                </FormNote>
 
                 <button
                   type="submit"

@@ -5,17 +5,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#06070b",
-        surface: "#10131b",
-        border: "rgba(255, 255, 255, 0.08)",
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        border: "rgb(var(--color-border) / 0.08)",
         text: {
-          DEFAULT: "#f4f7fb",
-          muted: "#9ca6ba",
+          DEFAULT: "rgb(var(--color-text) / <alpha-value>)",
+          muted: "rgb(var(--color-text-muted) / <alpha-value>)",
         },
         accent: {
-          purple: "#8b5cf6",
-          blue: "#38bdf8",
-          lilac: "#c4b5fd",
+          purple: "rgb(var(--color-accent-purple) / <alpha-value>)",
+          blue: "rgb(var(--color-accent-blue) / <alpha-value>)",
+          lilac: "rgb(var(--color-accent-lilac) / <alpha-value>)",
+          pink: "rgb(var(--color-accent-pink) / <alpha-value>)",
+          teal: "rgb(var(--color-accent-teal) / <alpha-value>)",
+          emerald: "rgb(var(--color-accent-emerald) / <alpha-value>)",
+          sky: "rgb(var(--color-accent-sky) / <alpha-value>)",
+          danger: "rgb(var(--color-danger) / <alpha-value>)",
         },
       },
       fontFamily: {
@@ -23,11 +28,11 @@ const config: Config = {
         sans: ["Space Grotesk", "sans-serif"],
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(255,255,255,0.06), 0 24px 80px rgba(56, 189, 248, 0.12), 0 32px 100px rgba(139, 92, 246, 0.15)",
+        glow: "var(--shadow-glow)",
       },
       backgroundImage: {
         "hero-grid":
-          "radial-gradient(circle at top, rgba(139,92,246,0.28), transparent 30%), radial-gradient(circle at 70% 10%, rgba(56,189,248,0.22), transparent 26%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent)",
+          "radial-gradient(circle at top, rgb(var(--color-accent-purple) / 0.28), transparent 30%), radial-gradient(circle at 70% 10%, rgb(var(--color-accent-blue) / 0.22), transparent 26%), linear-gradient(180deg, rgb(var(--color-border) / 0.03), transparent)",
       },
       backdropBlur: {
         xs: "2px",

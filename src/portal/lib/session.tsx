@@ -39,6 +39,58 @@ import {
 const STORAGE_KEY = "scout.portal.demoSession";
 const PROFILE_STORAGE_KEY_PREFIX = "scout.portal.profileDraft";
 
+type PortalAuthState =
+  | { status: "checking"; session: null; user: null }
+  | { status: "signed_out"; session: null; user: null }
+  | { status: "demo"; session: null; user: null }
+  | { status: "authenticated"; session: Session; user: User };
+type PortalRemoteResource = "membership" | "stats" | "history" | "billing" | "settings";
+type RemoteLoadStatus = "idle" | "loading" | "ready";
+
+const initialRemoteStatuses: Record<PortalRemoteResource, RemoteLoadStatus> = {
+  membership: "idle",
+  stats: "idle",
+  history: "idle",
+  billing: "idle",
+  settings: "idle",
+};
+
+function portalAuthState(session: Session | null, demoSessionIsActive: boolean): PortalAuthState {
+  if (session?.user) {
+    return { status: "authenticated", session, user: session.user };
+  }
+
+  return demoSessionIsActive
+    ? { status: "demo", session: null, user: null }
+    : { status: "signed_out", session: null, user: null };
+}
+
+function getPortalSessionSnapshot(
+  authState: PortalAuthState,
+  remoteStatuses: Record<PortalRemoteResource, RemoteLoadStatus>,
+) {
+  const isAuthenticated = authState.status === "authenticated" || authState.status === "demo";
+  const isRemoteAuthenticated = authState.status === "authenticated";
+
+  return {
+    isReady: authState.status !== "checking",
+    isAuthenticated,
+    isProfileRemote: isRemoteAuthenticated,
+    isMembershipRemote: isRemoteAuthenticated,
+    isStatsRemote: isRemoteAuthenticated,
+    isHistoryRemote: isRemoteAuthenticated,
+    isBillingRemote: isRemoteAuthenticated,
+    isSettingsRemote: isRemoteAuthenticated,
+    isMembershipLoading: remoteStatuses.membership === "loading",
+    isStatsLoading: remoteStatuses.stats === "loading",
+    isHistoryLoading: remoteStatuses.history === "loading",
+    isBillingLoading: remoteStatuses.billing === "loading",
+    isSettingsLoading: remoteStatuses.settings === "loading",
+    authUser: authState.status === "authenticated" ? authState.user : null,
+    authSession: authState.status === "authenticated" ? authState.session : null,
+  };
+}
+
 function getProfileStorageKey(identity: string) {
   return `${PROFILE_STORAGE_KEY_PREFIX}.${identity}`;
 }
@@ -336,39 +388,31 @@ type PortalSessionContextValue = {
 const PortalSessionContext = createContext<PortalSessionContextValue | null>(null);
 
 export function PortalSessionProvider({ children }: { children: ReactNode }) {
-  const [isReady, setIsReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [authState, setAuthState] = useState<PortalAuthState>({ status: "checking", session: null, user: null });
   const [profileDraft, setProfileDraft] = useState<PortalProfileDraft>(portalProfileDraftSeed);
   const [membership, setMembership] = useState<PortalMembership>(portalMembership);
-  const [isMembershipLoading, setIsMembershipLoading] = useState(false);
   const [stats, setStats] = useState<PortalStatsSnapshot>(portalStatsSnapshot);
   const [sportBreakdowns, setSportBreakdowns] = useState<PortalSportBreakdown[]>(portalSportBreakdowns);
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [history, setHistory] = useState<PortalHistoryItem[]>(portalHistoryPreview);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [billingProfile, setBillingProfile] = useState<PortalBillingProfile>(portalBillingProfile);
   const [invoices, setInvoices] = useState<PortalInvoiceItem[]>(portalInvoiceHistory);
-  const [isBillingLoading, setIsBillingLoading] = useState(false);
   const [settingsPreferences, setSettingsPreferences] = useState<PortalSettingsPreferences>(portalSettingsPreferences);
-  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
+  const [remoteStatuses, setRemoteStatuses] = useState(initialRemoteStatuses);
   const isSupabaseAuthEnabled = hasSupabaseConfig() && Boolean(supabase);
-  const isProfileRemote = Boolean(authUser);
-  const isMembershipRemote = Boolean(authUser);
-  const isStatsRemote = Boolean(authUser);
-  const isHistoryRemote = Boolean(authUser);
-  const isBillingRemote = Boolean(authUser);
-  const isSettingsRemote = Boolean(authUser);
+  const sessionSnapshot = getPortalSessionSnapshot(authState, remoteStatuses);
+  const authUser = sessionSnapshot.authUser;
 
-  const identityKey = authUser?.id ?? (isAuthenticated ? "demo" : "anonymous");
+  const identityKey = authUser?.id ?? (sessionSnapshot.isAuthenticated ? "demo" : "anonymous");
+
+  function setRemoteStatus(resource: PortalRemoteResource, status: RemoteLoadStatus) {
+    setRemoteStatuses((current) => ({ ...current, [resource]: status }));
+  }
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem(STORAGE_KEY);
 
     if (!isSupabaseAuthEnabled || !supabase) {
-      setIsAuthenticated(storedValue === "active");
-      setIsReady(true);
+      setAuthState(portalAuthState(null, storedValue === "active"));
       return;
     }
 
@@ -388,17 +432,11 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       }
 
       const session = data.session;
-      setAuthSession(session);
-      setAuthUser(session?.user ?? null);
-      setIsAuthenticated(Boolean(session?.user) || storedValue === "active");
-      setIsReady(true);
+      setAuthState(portalAuthState(session, storedValue === "active"));
     }
 
     const { data: authListener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-      setAuthSession(session);
-      setAuthUser(session?.user ?? null);
-      setIsAuthenticated(Boolean(session?.user) || window.localStorage.getItem(STORAGE_KEY) === "active");
-      setIsReady(true);
+      setAuthState(portalAuthState(session, window.localStorage.getItem(STORAGE_KEY) === "active"));
     });
 
     void loadSession();
@@ -473,13 +511,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!authUser) {
       setMembership(portalMembership);
-      setIsMembershipLoading(false);
+      setRemoteStatus("membership", "idle");
       return;
     }
 
     const currentAuthUser = authUser;
     let isMounted = true;
-    setIsMembershipLoading(true);
+    setRemoteStatus("membership", "loading");
 
     async function loadMembership() {
       try {
@@ -498,7 +536,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         if (isMounted) {
-          setIsMembershipLoading(false);
+          setRemoteStatus("membership", "ready");
         }
       }
     }
@@ -514,13 +552,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     if (!authUser) {
       setStats(portalStatsSnapshot);
       setSportBreakdowns(portalSportBreakdowns);
-      setIsStatsLoading(false);
+      setRemoteStatus("stats", "idle");
       return;
     }
 
     const currentAuthUser = authUser;
     let isMounted = true;
-    setIsStatsLoading(true);
+    setRemoteStatus("stats", "loading");
 
     async function loadStats() {
       try {
@@ -544,7 +582,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         if (isMounted) {
-          setIsStatsLoading(false);
+          setRemoteStatus("stats", "ready");
         }
       }
     }
@@ -559,13 +597,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!authUser) {
       setHistory(portalHistoryPreview);
-      setIsHistoryLoading(false);
+      setRemoteStatus("history", "idle");
       return;
     }
 
     const currentAuthUser = authUser;
     let isMounted = true;
-    setIsHistoryLoading(true);
+    setRemoteStatus("history", "loading");
 
     async function loadHistory() {
       try {
@@ -584,7 +622,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         if (isMounted) {
-          setIsHistoryLoading(false);
+          setRemoteStatus("history", "ready");
         }
       }
     }
@@ -600,13 +638,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     if (!authUser) {
       setBillingProfile(portalBillingProfile);
       setInvoices(portalInvoiceHistory);
-      setIsBillingLoading(false);
+      setRemoteStatus("billing", "idle");
       return;
     }
 
     const currentAuthUser = authUser;
     let isMounted = true;
-    setIsBillingLoading(true);
+    setRemoteStatus("billing", "loading");
 
     async function loadBilling() {
       try {
@@ -630,7 +668,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         if (isMounted) {
-          setIsBillingLoading(false);
+          setRemoteStatus("billing", "ready");
         }
       }
     }
@@ -645,13 +683,13 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!authUser) {
       setSettingsPreferences(portalSettingsPreferences);
-      setIsSettingsLoading(false);
+      setRemoteStatus("settings", "idle");
       return;
     }
 
     const currentAuthUser = authUser;
     let isMounted = true;
-    setIsSettingsLoading(true);
+    setRemoteStatus("settings", "loading");
 
     async function loadSettingsPreferences() {
       try {
@@ -670,7 +708,7 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         if (isMounted) {
-          setIsSettingsLoading(false);
+          setRemoteStatus("settings", "ready");
         }
       }
     }
@@ -684,30 +722,30 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<PortalSessionContextValue>(
     () => ({
-      isReady,
-      isAuthenticated,
+      isReady: sessionSnapshot.isReady,
+      isAuthenticated: sessionSnapshot.isAuthenticated,
       isSupabaseAuthEnabled,
-      isProfileRemote,
-      isMembershipRemote,
-      isStatsRemote,
-      isHistoryRemote,
-      isBillingRemote,
-      isSettingsRemote,
-      isMembershipLoading,
-      isStatsLoading,
-      isHistoryLoading,
-      isBillingLoading,
-      isSettingsLoading,
+      isProfileRemote: sessionSnapshot.isProfileRemote,
+      isMembershipRemote: sessionSnapshot.isMembershipRemote,
+      isStatsRemote: sessionSnapshot.isStatsRemote,
+      isHistoryRemote: sessionSnapshot.isHistoryRemote,
+      isBillingRemote: sessionSnapshot.isBillingRemote,
+      isSettingsRemote: sessionSnapshot.isSettingsRemote,
+      isMembershipLoading: sessionSnapshot.isMembershipLoading,
+      isStatsLoading: sessionSnapshot.isStatsLoading,
+      isHistoryLoading: sessionSnapshot.isHistoryLoading,
+      isBillingLoading: sessionSnapshot.isBillingLoading,
+      isSettingsLoading: sessionSnapshot.isSettingsLoading,
       authUser,
-      player: isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
-      profile: isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
-      membership: isAuthenticated ? membership : null,
-      billingProfile: isAuthenticated ? billingProfile : null,
-      invoices: isAuthenticated ? invoices : [],
-      settingsPreferences: isAuthenticated ? settingsPreferences : null,
-      stats: isAuthenticated ? stats : null,
-      sportBreakdowns: isAuthenticated ? sportBreakdowns : [],
-      history: isAuthenticated ? history : [],
+      player: sessionSnapshot.isAuthenticated ? getPlayerFromProfile(profileDraft, authUser) : null,
+      profile: sessionSnapshot.isAuthenticated ? getPortalProfileSnapshot(profileDraft) : null,
+      membership: sessionSnapshot.isAuthenticated ? membership : null,
+      billingProfile: sessionSnapshot.isAuthenticated ? billingProfile : null,
+      invoices: sessionSnapshot.isAuthenticated ? invoices : [],
+      settingsPreferences: sessionSnapshot.isAuthenticated ? settingsPreferences : null,
+      stats: sessionSnapshot.isAuthenticated ? stats : null,
+      sportBreakdowns: sessionSnapshot.isAuthenticated ? sportBreakdowns : [],
+      history: sessionSnapshot.isAuthenticated ? history : [],
       saveSettingsPreferences: async (nextPreferences) => {
         setSettingsPreferences(nextPreferences);
         const currentAuthUser = authUser;
@@ -769,37 +807,22 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       },
       signInAsDemo: () => {
         window.localStorage.setItem(STORAGE_KEY, "active");
-        setIsAuthenticated(true);
+        setAuthState({ status: "demo", session: null, user: null });
       },
       signOut: () => {
         window.localStorage.removeItem(STORAGE_KEY);
 
-        if (authSession && supabase) {
+        if (sessionSnapshot.authSession && supabase) {
           void supabase.auth.signOut();
         }
 
-        setAuthSession(null);
-        setAuthUser(null);
-        setIsAuthenticated(false);
+        setAuthState({ status: "signed_out", session: null, user: null });
       },
     }),
     [
-      authSession,
       authUser,
       identityKey,
-      isAuthenticated,
-      isMembershipLoading,
-      isMembershipRemote,
-      isProfileRemote,
-      isHistoryLoading,
-      isHistoryRemote,
-      isBillingLoading,
-      isBillingRemote,
-      isSettingsLoading,
-      isSettingsRemote,
-      isStatsLoading,
-      isStatsRemote,
-      isReady,
+      sessionSnapshot,
       isSupabaseAuthEnabled,
       billingProfile,
       history,
