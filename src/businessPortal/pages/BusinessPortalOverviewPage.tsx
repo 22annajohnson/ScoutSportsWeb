@@ -80,7 +80,7 @@ export function BusinessPortalOverviewPage() {
         }
       />
 
-      <div className="grid gap-5 xl:grid-cols-5">
+      <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-5">
         {[
           {
             label: "Profile completion",
@@ -116,13 +116,15 @@ export function BusinessPortalOverviewPage() {
           const Icon = item.icon;
 
           return (
-            <GlassCard key={item.label} className="p-6">
+            <GlassCard key={item.label} className="self-start p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-400/20 to-sky-500/20 text-emerald-200">
                 <Icon className="h-5 w-5" />
               </div>
               <p className="mt-5 text-sm text-white/60">{item.label}</p>
-              <p className="mt-2 font-display text-4xl font-black text-white">{item.value}</p>
-              <p className="mt-3 text-sm leading-6 text-white/60">{item.detail}</p>
+              <p className="mt-2 break-words text-balance font-display text-3xl font-black leading-tight text-white 2xl:text-4xl">
+                {item.value}
+              </p>
+              <p className="mt-3 break-words text-sm leading-6 text-white/60 [overflow-wrap:anywhere]">{item.detail}</p>
             </GlassCard>
           );
         })}

@@ -42,6 +42,26 @@ const emptyEditor: EditorState = {
   attachments: [],
 };
 
+function formatDateTimeLocal(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 function toEditorState(item: BusinessPortalContentItem): EditorState {
   return {
     id: item.id,
@@ -66,9 +86,20 @@ export function BusinessPortalContentPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const selectedItem = content.find((item) => item.id === selectedId) ?? content[0] ?? null;
-    setSelectedId(selectedItem?.id ?? null);
-    setEditorState(selectedItem ? toEditorState(selectedItem) : emptyEditor);
+    if (selectedId === null) {
+      setEditorState((current) => (current.id ? emptyEditor : current));
+      return;
+    }
+
+    const selectedItem = content.find((item) => item.id === selectedId) ?? null;
+
+    if (!selectedItem) {
+      setSelectedId(content[0]?.id ?? null);
+      setEditorState(content[0] ? toEditorState(content[0]) : emptyEditor);
+      return;
+    }
+
+    setEditorState(toEditorState(selectedItem));
   }, [content, selectedId]);
 
   const summary = useMemo(
@@ -194,17 +225,17 @@ export function BusinessPortalContentPage() {
         }
       />
 
-      <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
-        <div className="grid gap-5">
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid items-start gap-5 xl:grid-cols-[0.92fr_1.08fr]">
+        <div className="grid content-start gap-5">
+          <div className="grid items-start gap-5 sm:grid-cols-2 2xl:grid-cols-4">
             {[
               { label: "Drafts", value: String(summary.drafts) },
               { label: "Scheduled", value: String(summary.scheduled) },
               { label: "Published", value: String(summary.published) },
               { label: "Archived", value: String(summary.archived) },
             ].map((item) => (
-              <GlassCard key={item.label} className="p-6">
-                <p className="text-sm text-white/50">{item.label}</p>
+              <GlassCard key={item.label} className="self-start p-6">
+                <p className="text-xs leading-5 text-white/50 sm:text-sm sm:leading-6">{item.label}</p>
                 <p className="mt-3 font-display text-4xl font-black leading-none text-white">{item.value}</p>
               </GlassCard>
             ))}
@@ -387,7 +418,7 @@ export function BusinessPortalContentPage() {
               <input
                 disabled={!permissions.canManageContent}
                 type="datetime-local"
-                value={editorState.publishAt ? editorState.publishAt.slice(0, 16) : ""}
+                value={formatDateTimeLocal(editorState.publishAt)}
                 onChange={(event) =>
                   updateField("publishAt", event.target.value ? new Date(event.target.value).toISOString() : "")
                 }
@@ -426,7 +457,7 @@ export function BusinessPortalContentPage() {
                   <div key={attachment.id} className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
                     <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                       <div className="grid gap-4">
-                        <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(160px,200px)]">
                           <label className="space-y-2">
                             <span className="text-sm text-white/70">Label</span>
                             <input
@@ -445,7 +476,7 @@ export function BusinessPortalContentPage() {
                               onChange={(event) =>
                                 updateAttachment(attachment.id, { kind: event.target.value as BusinessContentMediaKind })
                               }
-                              className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="min-w-0 w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-white outline-none transition focus:border-emerald-300/50 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {mediaKindOptions.map((option) => (
                                 <option key={option} value={option} className="bg-slate-950 text-white">
