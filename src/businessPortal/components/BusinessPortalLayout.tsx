@@ -15,7 +15,7 @@ const businessPortalNav = [
 ];
 
 export function BusinessPortalLayout() {
-  const { business, isSupabaseMode, signOut, user } = useBusinessPortalSession();
+  const { authStatus, business, signOut, user } = useBusinessPortalSession();
 
   if (!user || !business) {
     return null;
@@ -39,7 +39,7 @@ export function BusinessPortalLayout() {
                   {business.verificationStatus}
                 </div>
                 <p className="mt-4 text-sm leading-7 text-white/60">
-                  {isSupabaseMode
+                  {authStatus === "authenticated"
                     ? `${user.fullName} is signed into this live business workspace.`
                     : `${user.fullName} is browsing the sample business workspace.`}
                 </p>
@@ -75,7 +75,7 @@ export function BusinessPortalLayout() {
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
               >
                 <LogOut className="h-4 w-4" />
-                {isSupabaseMode ? "Sign out" : "Exit business demo"}
+                {authStatus === "authenticated" ? "Sign out" : "Exit business demo"}
               </button>
             </GlassCard>
 

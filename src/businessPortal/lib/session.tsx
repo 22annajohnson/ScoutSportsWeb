@@ -96,12 +96,9 @@ type BusinessPortalContentItemDraft = {
 };
 
 type BusinessPortalSessionContextValue = {
-  isReady: boolean;
-  isAuthenticated: boolean;
-  isSupabaseMode: boolean;
-  needsBusinessSetup: boolean;
-  isProvisioningBusiness: boolean;
-  isAcceptingInvitation: boolean;
+  authStatus: BusinessPortalAuthState["status"];
+  workspaceStatus: BusinessPortalWorkspaceState["status"];
+  operation: BusinessPortalOperation;
   backendError: string;
   currentRole: BusinessTeamMemberRole | null;
   permissions: BusinessPortalPermissions;
@@ -143,19 +140,22 @@ function getBusinessPortalSessionSnapshot(
   operation: BusinessPortalOperation,
   workspaceState: BusinessPortalWorkspaceState,
 ) {
-  const isAuthenticated = authState.status === "authenticated" || authState.status === "demo";
-
   return {
-    isReady: authState.status !== "checking",
-    isAuthenticated,
-    isSupabaseMode: authState.status === "authenticated",
-    isProvisioningBusiness: operation === "provisioning_workspace",
-    isAcceptingInvitation: operation === "accepting_invitation",
-    needsBusinessSetup: workspaceState.status === "needs_setup",
+    authStatus: authState.status,
+    workspaceStatus: workspaceState.status,
+    operation,
     supabaseUser: authState.status === "authenticated" ? authState.user : null,
     businessId: workspaceState.businessId,
     currentRole: workspaceState.role,
   };
+}
+
+function hasBusinessPortalAccess(authStatus: BusinessPortalAuthState["status"]) {
+  return authStatus === "authenticated" || authStatus === "demo";
+}
+
+function isLiveBusinessPortalSession(authStatus: BusinessPortalAuthState["status"]) {
+  return authStatus === "authenticated";
 }
 
 function getInitials(value: string) {
@@ -636,16 +636,13 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
 
   const value = useMemo<BusinessPortalSessionContextValue>(
     () => ({
-      isReady: sessionSnapshot.isReady,
-      isAuthenticated: sessionSnapshot.isAuthenticated,
-      isSupabaseMode: sessionSnapshot.isSupabaseMode,
-      needsBusinessSetup: sessionSnapshot.needsBusinessSetup,
-      isProvisioningBusiness: sessionSnapshot.isProvisioningBusiness,
-      isAcceptingInvitation: sessionSnapshot.isAcceptingInvitation,
+      authStatus: sessionSnapshot.authStatus,
+      workspaceStatus: sessionSnapshot.workspaceStatus,
+      operation: sessionSnapshot.operation,
       backendError,
       currentRole: sessionSnapshot.currentRole,
       permissions:
-        !sessionSnapshot.isAuthenticated || !sessionSnapshot.currentRole
+        !hasBusinessPortalAccess(sessionSnapshot.authStatus) || !sessionSnapshot.currentRole
           ? ownerPermissions
           : sessionSnapshot.currentRole === "Owner"
             ? ownerPermissions
@@ -654,21 +651,21 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
               : sessionSnapshot.currentRole === "Billing Admin"
                 ? { canManageProfile: false, canManageTeam: false, canManageBilling: true, canManageContent: false }
                 : { canManageProfile: false, canManageTeam: false, canManageBilling: false, canManageContent: false },
-      user: sessionSnapshot.isAuthenticated
+      user: hasBusinessPortalAccess(sessionSnapshot.authStatus)
         ? getWorkspaceIdentity(
             businessDraft,
             supabaseUser ? getPreferredUserLabel(supabaseUser) : undefined,
             supabaseUser?.email,
           )
         : null,
-      business: sessionSnapshot.isAuthenticated ? getBusinessPortalSnapshot(businessDraft) : null,
-      billing: sessionSnapshot.isAuthenticated ? billingState : null,
-      content: sessionSnapshot.isAuthenticated ? contentState : [],
-      team: sessionSnapshot.isAuthenticated ? teamState : [],
-      invoices: sessionSnapshot.isAuthenticated ? invoiceState : [],
-      activity: sessionSnapshot.isAuthenticated ? activityState : [],
+      business: hasBusinessPortalAccess(sessionSnapshot.authStatus) ? getBusinessPortalSnapshot(businessDraft) : null,
+      billing: hasBusinessPortalAccess(sessionSnapshot.authStatus) ? billingState : null,
+      content: hasBusinessPortalAccess(sessionSnapshot.authStatus) ? contentState : [],
+      team: hasBusinessPortalAccess(sessionSnapshot.authStatus) ? teamState : [],
+      invoices: hasBusinessPortalAccess(sessionSnapshot.authStatus) ? invoiceState : [],
+      activity: hasBusinessPortalAccess(sessionSnapshot.authStatus) ? activityState : [],
       saveBusinessProfile: async (nextProfile) => {
-        if (sessionSnapshot.isSupabaseMode && businessId) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus) && businessId) {
           const updatedBusiness = await updateBusinessWorkspace(businessId, nextProfile);
           setBusinessDraft(deriveBusinessDraft(updatedBusiness));
           await captureAuditEvent({
@@ -688,7 +685,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         window.localStorage.setItem(BUSINESS_STORAGE_KEY, JSON.stringify(nextProfile));
       },
       resetBusinessProfile: () => {
-        if (sessionSnapshot.isSupabaseMode) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus)) {
           return;
         }
 
@@ -696,7 +693,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         window.localStorage.removeItem(BUSINESS_STORAGE_KEY);
       },
       saveBillingSettings: async (nextBilling) => {
-        if (sessionSnapshot.isSupabaseMode && businessId) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus) && businessId) {
           const updatedBilling = await upsertBusinessBillingProfile({
             businessId,
             planName: nextBilling.planName.toLowerCase(),
@@ -727,7 +724,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         window.localStorage.setItem(BILLING_STORAGE_KEY, JSON.stringify(nextBilling));
       },
       saveContentItem: async (input) => {
-        if (sessionSnapshot.isSupabaseMode && businessId) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus) && businessId) {
           const savedPost = input.id
             ? await updateBusinessContentPost({
                 contentId: input.id,
@@ -808,7 +805,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         });
       },
       inviteTeamMember: async ({ name, email, role }) => {
-        if (sessionSnapshot.isSupabaseMode && businessId && supabaseUser) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus) && businessId && supabaseUser) {
           const invitation = await createBusinessInvitation({
             businessId,
             invitedName: name.trim(),
@@ -898,7 +895,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         return { inviteLink: null, emailSent: false, emailError: null };
       },
       updateTeamMemberRole: async (memberId, role) => {
-        if (sessionSnapshot.isSupabaseMode && businessId && supabaseUser) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus) && businessId && supabaseUser) {
           const currentMember = teamState.find((member) => member.id === memberId);
 
           if (currentMember?.source === "invitation") {
@@ -935,7 +932,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
 
         setTeamState((current) => {
           const next = current.map((member) => (member.id === memberId ? { ...member, role } : member));
-          if (!sessionSnapshot.isSupabaseMode) {
+          if (!isLiveBusinessPortalSession(sessionSnapshot.authStatus)) {
             window.localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(next));
           }
           return next;
@@ -949,7 +946,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
 
         const nextStatus: BusinessTeamMemberStatus = currentMember.status === "Paused" ? "Active" : "Paused";
 
-        if (sessionSnapshot.isSupabaseMode && businessId && supabaseUser) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus) && businessId && supabaseUser) {
           if (currentMember.source === "invitation") {
             await updateBusinessInvitation({
               invitationId: memberId,
@@ -999,7 +996,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
               : member,
           );
 
-          if (!sessionSnapshot.isSupabaseMode) {
+          if (!isLiveBusinessPortalSession(sessionSnapshot.authStatus)) {
             window.localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(next));
           }
 
@@ -1012,7 +1009,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         setWorkspaceState({ status: "ready", businessId: null, role: "Owner" });
       },
       signOut: async () => {
-        if (sessionSnapshot.isSupabaseMode) {
+        if (isLiveBusinessPortalSession(sessionSnapshot.authStatus)) {
           await signOutSupabase();
           setAuthState({ status: "signed_out", user: null });
           setWorkspaceState({ status: "unknown", businessId: null, role: null });
@@ -1024,7 +1021,7 @@ export function BusinessPortalSessionProvider({ children }: { children: ReactNod
         setWorkspaceState({ status: "unknown", businessId: null, role: null });
       },
       createWorkspace: async (input) => {
-        if (!sessionSnapshot.isSupabaseMode) {
+        if (!isLiveBusinessPortalSession(sessionSnapshot.authStatus)) {
           setBusinessDraft(input);
           setAuthState({ status: "demo", user: null });
           setWorkspaceState({ status: "ready", businessId: null, role: "Owner" });

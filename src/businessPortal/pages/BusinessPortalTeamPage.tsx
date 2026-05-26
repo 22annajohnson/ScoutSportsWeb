@@ -8,7 +8,7 @@ import { type BusinessTeamMemberRole } from "../lib/mockBusinessPortal";
 const roleOptions: BusinessTeamMemberRole[] = ["Owner", "Manager", "Analyst", "Billing Admin"];
 
 export function BusinessPortalTeamPage() {
-  const { inviteTeamMember, isSupabaseMode, permissions, currentRole, team, toggleTeamMemberStatus, updateTeamMemberRole } =
+  const { authStatus, inviteTeamMember, permissions, currentRole, team, toggleTeamMemberStatus, updateTeamMemberRole } =
     useBusinessPortalSession();
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -59,7 +59,7 @@ export function BusinessPortalTeamPage() {
     setLatestInviteLink(inviteResult.inviteLink ?? "");
     setLatestInviteEmailSent(inviteResult.emailSent);
 
-    if (!isSupabaseMode) {
+    if (authStatus !== "authenticated") {
       setMessage("Invitation added to the demo workspace.");
       return;
     }

@@ -6,7 +6,7 @@ import { BusinessPortalPageHeader } from "../components/BusinessPortalPageHeader
 import { useBusinessPortalSession } from "../lib/session";
 
 export function BusinessPortalOverviewPage() {
-  const { billing, business, content, isSupabaseMode, team, user } = useBusinessPortalSession();
+  const { authStatus, billing, business, content, team, user } = useBusinessPortalSession();
 
   if (!user || !business || !billing) {
     return null;
@@ -73,7 +73,7 @@ export function BusinessPortalOverviewPage() {
             <p className="text-xs uppercase tracking-[0.3em] text-white/45">Launch readiness</p>
             <p className="mt-2 text-2xl font-black text-white">{completedReadinessChecks}/4 complete</p>
             <p className="mt-1 text-sm text-emerald-200">
-              {business.businessStatus} • {isSupabaseMode ? "live data" : "demo data"}
+              {business.businessStatus} • {authStatus === "authenticated" ? "live data" : "demo data"}
             </p>
             <p className="mt-3 text-sm text-white/55">Verification status: {business.verificationStatus}</p>
           </div>

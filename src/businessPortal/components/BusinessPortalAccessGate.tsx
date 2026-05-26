@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Building2, ShieldCheck, Sparkles } from "lucide-react";
 import { Outlet, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/Button";
@@ -12,15 +12,13 @@ import { businessPortalProfileDraftSeed, type BusinessPortalProfileDraft } from 
 export function BusinessPortalAccessGate() {
   const {
     acceptInvitationToken,
+    authStatus,
     backendError,
     createWorkspace,
-    isAcceptingInvitation,
-    isAuthenticated,
-    isProvisioningBusiness,
-    isReady,
-    needsBusinessSetup,
+    operation,
     signInAsDemo,
     user,
+    workspaceStatus,
   } = useBusinessPortalSession();
   const [searchParams, setSearchParams] = useSearchParams();
   const [email, setEmail] = useState("");
@@ -48,9 +46,9 @@ export function BusinessPortalAccessGate() {
     setShowCreateWorkspaceForm(!inviteToken);
   }, [inviteToken]);
 
-  const canShowAuthCard = useMemo(() => supabaseAvailable && !isAuthenticated, [isAuthenticated, supabaseAvailable]);
+  const canShowAuthCard = supabaseAvailable && authStatus === "signed_out";
 
-  if (!isReady) {
+  if (authStatus === "checking") {
     return (
       <div className="flex min-h-screen items-center justify-center px-5">
         <GlassCard className="w-full max-w-md p-8 text-center">
@@ -157,7 +155,7 @@ export function BusinessPortalAccessGate() {
     }
   }
 
-  if (!isAuthenticated) {
+  if (authStatus === "signed_out") {
     return (
       <section className="min-h-screen py-16 sm:py-20">
         <Container>
@@ -267,7 +265,7 @@ export function BusinessPortalAccessGate() {
     );
   }
 
-  if (needsBusinessSetup) {
+  if (workspaceStatus === "needs_setup") {
     return (
       <section className="min-h-screen py-16 sm:py-20">
         <Container>
@@ -294,10 +292,10 @@ export function BusinessPortalAccessGate() {
                   <button
                     type="button"
                     onClick={() => void handleAcceptInvite()}
-                    disabled={isAcceptingInvitation}
+                    disabled={operation === "accepting_invitation"}
                     className="mt-4 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {isAcceptingInvitation ? "Accepting..." : "Accept business invitation"}
+                    {operation === "accepting_invitation" ? "Accepting..." : "Accept business invitation"}
                   </button>
                   <button
                     type="button"
@@ -416,10 +414,10 @@ export function BusinessPortalAccessGate() {
 
                 <button
                   type="submit"
-                  disabled={isProvisioningBusiness}
+                  disabled={operation === "provisioning_workspace"}
                   className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {isProvisioningBusiness ? "Creating workspace..." : "Create business workspace"}
+                  {operation === "provisioning_workspace" ? "Creating workspace..." : "Create business workspace"}
                 </button>
               </form>
               )}
