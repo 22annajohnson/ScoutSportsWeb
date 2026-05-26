@@ -38,26 +38,27 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          deploy_dir="$(mktemp -d)"
+          repo_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
-          if git ls-remote --exit-code --heads origin hostinger-deploy; then
-            git fetch origin hostinger-deploy
-            git worktree add .hostinger-deploy origin/hostinger-deploy
+          if git ls-remote --exit-code --heads "${repo_url}" hostinger-deploy; then
+            git clone --branch hostinger-deploy --single-branch "${repo_url}" "${deploy_dir}"
           else
-            git worktree add --detach .hostinger-deploy
-            cd .hostinger-deploy
+            git clone --no-checkout "${repo_url}" "${deploy_dir}"
+            cd "${deploy_dir}"
             git checkout --orphan hostinger-deploy
+            git rm -rf . >/dev/null 2>&1 || true
             git commit --allow-empty -m "Initialize hostinger-deploy"
-            cd ..
+            cd -
           fi
 
-          rsync -a --delete dist/ .hostinger-deploy/
+          rsync -a --delete dist/ "${deploy_dir}/"
 
-          cd .hostinger-deploy
+          cd "${deploy_dir}"
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -m "Deploy ${GITHUB_SHA}"
-            git push origin HEAD:hostinger-deploy
+            git push origin hostinger-deploy
           else
             echo "No changes to deploy"
           fi
