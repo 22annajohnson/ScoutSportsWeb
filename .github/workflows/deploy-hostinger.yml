@@ -36,12 +36,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd dist
-          git init
-          git checkout -b hostinger-deploy
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Deploy ${GITHUB_SHA}"
-          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push --force origin hostinger-deploy
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          if git ls-remote --exit-code --heads origin hostinger-deploy; then
+            git fetch origin hostinger-deploy
+            git worktree add .hostinger-deploy origin/hostinger-deploy
+          else
+            git worktree add --detach .hostinger-deploy
+            cd .hostinger-deploy
+            git checkout --orphan hostinger-deploy
+            git commit --allow-empty -m "Initialize hostinger-deploy"
+            cd ..
+          fi
+
+          rsync -a --delete dist/ .hostinger-deploy/
+
+          cd .hostinger-deploy
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "Deploy ${GITHUB_SHA}"
+            git push origin HEAD:hostinger-deploy
+          else
+            echo "No changes to deploy"
+          fi
