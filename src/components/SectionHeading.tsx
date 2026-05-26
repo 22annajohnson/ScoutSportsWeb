@@ -20,10 +20,10 @@ export function SectionHeading({
           {eyebrow}
         </div>
       ) : null}
-      <h2 className="font-display text-4xl font-black tracking-tight leading-[0.95] text-white sm:text-5xl">
+      <h2 className="font-display text-3xl font-black leading-[0.98] tracking-tight text-white sm:text-5xl">
         {title}
       </h2>
-      <p className="mt-4 text-lg leading-relaxed text-white/70">{description}</p>
+      <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">{description}</p>
     </div>
   );
 }

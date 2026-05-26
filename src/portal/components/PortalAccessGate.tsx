@@ -28,7 +28,7 @@ export function PortalAccessGate() {
                 Player portal access
               </div>
               <div>
-                <h1 className="font-display text-5xl font-black leading-[0.92] tracking-tight text-white sm:text-6xl">
+                <h1 className="font-display text-4xl font-black leading-[0.95] tracking-tight text-white sm:text-5xl lg:text-6xl">
                   Your Scout account,
                   <br />
                   membership, and match history

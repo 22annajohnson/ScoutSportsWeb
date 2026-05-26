@@ -102,7 +102,7 @@ export function CheckoutPage() {
               {copy.eyebrow}
             </div>
             <div>
-              <h1 className="font-display text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-6xl">
+              <h1 className="font-display text-4xl font-black leading-[0.95] tracking-tight text-white sm:text-5xl lg:text-6xl">
                 {copy.headline}
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/70">{copy.note}</p>
@@ -134,7 +134,7 @@ export function CheckoutPage() {
 
           <GlassCard className="p-7">
             {isFormSubmitted(formStatus) ? (
-              <div className="flex min-h-[520px] flex-col justify-center">
+              <div className="flex min-h-[420px] flex-col justify-center sm:min-h-[520px]">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/30 to-blue-500/30 text-violet-200">
                   <Sparkles className="h-6 w-6" />
                 </div>
