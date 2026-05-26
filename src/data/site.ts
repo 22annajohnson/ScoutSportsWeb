@@ -19,7 +19,7 @@ export const navLinks = [
 ];
 
 export const heroStats = [
-  { label: "Local player network", value: "1,200+" },
+  { label: "Local player network", value: "1,500+" },
   { label: "Bracket play window", value: "24/7" },
   { label: "Ways to find your crew", value: "∞" },
 ];
