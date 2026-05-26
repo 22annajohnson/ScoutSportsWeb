@@ -21,7 +21,7 @@ export function HeroSection() {
               Built for local pickup sports
             </div>
             <div className="space-y-5">
-              <h1 className="max-w-4xl font-display text-6xl font-black tracking-tight leading-[0.92] text-white sm:text-7xl">
+              <h1 className="max-w-4xl font-display text-5xl font-black leading-[0.94] tracking-tight text-white sm:text-6xl lg:text-7xl">
                 Meet players.
                 <br />
                 Build your circle.
@@ -35,11 +35,11 @@ export function HeroSection() {
                 city’s courts, circles, brackets, and sports hotspots into one premium community.
               </p>
             </div>
-            <div className="mt-10 flex flex-wrap gap-4">
-              <Button href={routes.pricing} className="px-7 py-5 text-base shadow-2xl shadow-violet-500/20">
+            <div className="mt-10 grid gap-3 sm:flex sm:flex-wrap sm:gap-4">
+              <Button href={routes.pricing} className="w-full px-6 py-4 text-base shadow-2xl shadow-violet-500/20 sm:w-auto sm:px-7 sm:py-5">
                 Join Early Access
               </Button>
-              <Button href={routes.howItWorks} variant="secondary" className="px-7 py-5 text-base">
+              <Button href={routes.howItWorks} variant="secondary" className="w-full px-6 py-4 text-base sm:w-auto sm:px-7 sm:py-5">
                 See How It Works
               </Button>
             </div>
@@ -59,21 +59,21 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.15 }}
-            className="relative h-[720px]"
+            className="relative h-[560px] sm:h-[640px] lg:h-[720px]"
           >
-            <div className="absolute inset-y-8 right-0 w-full rounded-[2.5rem] border border-white/10 bg-white/5 p-5 shadow-[0_40px_120px_rgb(var(--color-accent-purple)/0.35)] backdrop-blur-2xl lg:w-[82%]">
-              <div className="flex h-full flex-col rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-5">
-                <div className="mb-4 flex items-center justify-between">
+            <div className="absolute inset-y-4 right-0 w-full rounded-[2rem] border border-white/10 bg-white/5 p-3 shadow-[0_40px_120px_rgb(var(--color-accent-purple)/0.35)] backdrop-blur-2xl sm:p-5 lg:inset-y-8 lg:w-[82%] lg:rounded-[2.5rem]">
+              <div className="flex h-full flex-col rounded-[1.5rem] border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-3 sm:rounded-[2rem] sm:p-5">
+                <div className="mb-4 flex items-start justify-between gap-3 sm:items-center">
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-white/45">Scout</p>
-                    <h3 className="text-2xl font-bold text-white">Find your next game</h3>
+                    <h3 className="text-xl font-bold text-white sm:text-2xl">Find your next game</h3>
                   </div>
-                  <div className="rounded-full border border-blue-300/20 bg-blue-500/15 px-3 py-2 text-xs text-blue-200">
+                  <div className="shrink-0 rounded-full border border-blue-300/20 bg-blue-500/15 px-3 py-2 text-xs text-blue-200">
                     Live nearby
                   </div>
                 </div>
 
-                <div className="relative flex-1 overflow-hidden rounded-[2rem] border border-white/10 bg-neutral-900">
+                <div className="relative flex-1 overflow-hidden rounded-[1.5rem] border border-white/10 bg-neutral-900 sm:rounded-[2rem]">
                   <img
                     src="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80"
                     alt="Local sports player"
@@ -81,19 +81,19 @@ export function HeroSection() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
                   <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 via-transparent to-blue-500/20" />
-                  <div className="absolute bottom-0 left-0 right-0 space-y-4 p-5">
-                    <div className="flex items-end justify-between gap-4">
+                  <div className="absolute bottom-0 left-0 right-0 space-y-4 p-4 sm:p-5">
+                    <div className="flex items-end justify-between gap-3">
                       <div>
-                        <h4 className="text-4xl font-black text-white">Alyssa, 26</h4>
-                        <p className="text-white/75">4.8 match fit • 2.1 mi away • Pickleball</p>
+                        <h4 className="text-3xl font-black text-white sm:text-4xl">Alyssa, 26</h4>
+                        <p className="text-sm text-white/75 sm:text-base">4.8 match fit • 2.1 mi away • Pickleball</p>
                       </div>
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-2xl font-black text-white backdrop-blur">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-xl font-black text-white backdrop-blur sm:h-16 sm:w-16 sm:text-2xl">
                         92
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="grid grid-cols-3 gap-2 text-xs sm:text-sm">
                       {["Competitive", "Weeknights", "Beginner+"].map((item) => (
-                        <div key={item} className="rounded-2xl bg-white/10 p-3 text-center text-white backdrop-blur">
+                        <div key={item} className="rounded-2xl bg-white/10 p-2 text-center text-white backdrop-blur sm:p-3">
                           {item}
                         </div>
                       ))}
@@ -101,18 +101,18 @@ export function HeroSection() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
                   {["Brackets", "Inner Circle", "Hotspots"].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-sm text-white/55">Inside Scout</p>
-                      <p className="mt-1 font-semibold text-white">{item}</p>
+                    <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-2 sm:p-3">
+                      <p className="text-xs text-white/55 sm:text-sm">Inside Scout</p>
+                      <p className="mt-1 text-sm font-semibold text-white sm:text-base">{item}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            <GlassCard className="absolute bottom-12 left-0 w-60 bg-black/50 p-4 shadow-[0_20px_80px_rgb(var(--color-accent-blue)/0.18)] backdrop-blur-2xl">
+            <GlassCard className="absolute bottom-4 left-0 w-52 bg-black/50 p-3 shadow-[0_20px_80px_rgb(var(--color-accent-blue)/0.18)] backdrop-blur-2xl sm:bottom-12 sm:w-60 sm:p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-white/45">Inner Circle</p>
               <div className="mt-4 space-y-3">
                 {[

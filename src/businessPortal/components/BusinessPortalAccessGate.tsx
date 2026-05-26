@@ -165,7 +165,7 @@ export function BusinessPortalAccessGate() {
                 Business portal foundation preview
               </div>
               <div>
-                <h1 className="font-display text-5xl font-black leading-[0.92] tracking-tight text-white sm:text-6xl">
+                <h1 className="font-display text-4xl font-black leading-[0.95] tracking-tight text-white sm:text-5xl lg:text-6xl">
                   Run your business workspace,
                   <br />
                   team access, billing, and
@@ -179,16 +179,16 @@ export function BusinessPortalAccessGate() {
                   profile details, team access, billing, and launch content.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-4">
+              <div className="grid gap-3 sm:flex sm:flex-wrap sm:gap-4">
                 <button
                   type="button"
                   onClick={signInAsDemo}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 sm:w-auto"
                 >
                   Open sample workspace
                   <Sparkles className="h-4 w-4" />
                 </button>
-                <Button href={routes.business} variant="secondary" className="px-6 py-4">
+                <Button href={routes.business} variant="secondary" className="w-full px-6 py-4 sm:w-auto">
                   Back to business page
                 </Button>
               </div>
@@ -272,7 +272,7 @@ export function BusinessPortalAccessGate() {
           <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[0.88fr_1.12fr]">
             <GlassCard className="p-8">
               <p className="text-xs uppercase tracking-[0.3em] text-white/45">Workspace setup</p>
-              <h1 className="mt-3 font-display text-4xl font-black text-white">
+              <h1 className="mt-3 font-display text-3xl font-black text-white sm:text-4xl">
                 {inviteToken ? "Join your business workspace" : "Create your business portal workspace"}
               </h1>
               <p className="mt-4 text-sm leading-7 text-white/65">
@@ -293,14 +293,14 @@ export function BusinessPortalAccessGate() {
                     type="button"
                     onClick={() => void handleAcceptInvite()}
                     disabled={operation === "accepting_invitation"}
-                    className="mt-4 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-sky-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-glow transition duration-300 hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
                   >
                     {operation === "accepting_invitation" ? "Accepting..." : "Accept business invitation"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowCreateWorkspaceForm((current) => !current)}
-                    className="mt-3 inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                    className="mt-3 inline-flex w-full items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
                   >
                     {showCreateWorkspaceForm ? "Hide create-new-business form" : "Want to create a new business instead?"}
                   </button>
