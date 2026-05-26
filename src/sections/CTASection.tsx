@@ -30,12 +30,12 @@ export function CTASection({
               {title}
             </h2>
             <p className="mt-5 text-base leading-8 text-text-muted sm:text-lg">{description}</p>
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <Button href={primaryHref} showArrow>
+            <div className="mt-10 grid gap-3 sm:flex sm:flex-wrap sm:justify-center sm:gap-4">
+              <Button href={primaryHref} showArrow className="w-full sm:w-auto">
                 {primaryLabel}
               </Button>
               {secondaryLabel && secondaryHref ? (
-                <Button href={secondaryHref} variant="secondary">
+                <Button href={secondaryHref} variant="secondary" className="w-full sm:w-auto">
                   {secondaryLabel}
                 </Button>
               ) : null}

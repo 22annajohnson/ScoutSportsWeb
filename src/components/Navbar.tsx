@@ -10,16 +10,16 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 pt-6">
+    <header className="sticky top-0 z-50 pt-3 sm:pt-6">
       <Container>
-        <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-xl">
+        <div className="flex min-h-[64px] items-center justify-between gap-3 rounded-[1.75rem] border border-white/10 bg-white/5 px-3 py-3 backdrop-blur-xl sm:min-h-[72px] sm:rounded-full sm:px-5">
           <NavLink to={routes.home} className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-purple to-accent-blue shadow-glow">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-purple to-accent-blue shadow-glow sm:h-11 sm:w-11">
               <span className="font-display text-base font-black text-white">S</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="text-sm font-semibold text-white">Scout Sports</div>
-              <div className="text-xs text-white/55">scoutsports.app</div>
+              <div className="truncate text-xs text-white/55">scoutsports.app</div>
             </div>
           </NavLink>
 

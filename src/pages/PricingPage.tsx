@@ -42,7 +42,7 @@ export function PricingPage() {
                   </div>
 
                   <div className="mt-8 flex items-end gap-1">
-                    <span className="font-display text-6xl font-black text-white">{tier.price}</span>
+                    <span className="font-display text-5xl font-black text-white sm:text-6xl">{tier.price}</span>
                     <span className="mb-2 text-sm text-white/50">{tier.cadence ?? ""}</span>
                   </div>
                   <p className="mt-4 text-base leading-relaxed text-white/70">{tier.description}</p>
