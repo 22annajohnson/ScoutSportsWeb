@@ -132,7 +132,7 @@ export function BusinessPage() {
 
             <GlassCard className="p-8">
               {isFormSubmitted(formStatus) ? (
-                <div className="flex min-h-[560px] flex-col justify-center">
+                <div className="flex min-h-[420px] flex-col justify-center sm:min-h-[560px]">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/30 to-blue-500/30 text-violet-200">
                     <Sparkles className="h-6 w-6" />
                   </div>
