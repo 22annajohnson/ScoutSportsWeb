@@ -306,12 +306,29 @@ export function hasSupabaseConfig() {
   return isSupabaseConfigured;
 }
 
+function isLocalDevelopmentOrigin(value: string) {
+  try {
+    const { hostname, protocol } = new URL(value);
+    return (
+      protocol === "http:" &&
+      (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function getAppOrigin() {
+  const currentOrigin = window.location.origin;
+
   if (import.meta.env.DEV) {
-    return window.location.origin;
+    return currentOrigin;
   }
 
-  return inviteSiteUrl || siteUrl || window.location.origin;
+  const configuredOrigins = [inviteSiteUrl, siteUrl].filter((value): value is string => Boolean(value));
+  const firstSafeConfiguredOrigin = configuredOrigins.find((value) => !isLocalDevelopmentOrigin(value));
+
+  return firstSafeConfiguredOrigin || currentOrigin;
 }
 
 function requireSupabase() {
